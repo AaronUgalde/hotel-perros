@@ -7,6 +7,9 @@ import { FormSection } from '../../../components/ui/FormSection';
 import { VaccineTable, type Vaccine } from '../../../components/ui/VaccineTable';
 import { ChipSection } from '../../../components/ui/ChipSection';
 import Select  from '../../../components/ui/Select';
+import { Header } from '../../../components/layout/Header';
+import { Footer } from '../../../components/layout/Footer';
+import gatoRegistrar from '../../../assets/gato_registrar.png'
 
 // Interfaces para tipos de datos
 interface PetFormData {
@@ -147,12 +150,7 @@ export const PetRegistrationForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header placeholder */}
-      <div className="bg-white shadow-sm border-b py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-bold">Registro de Mascota</h1>
-        </div>
-      </div>
+      <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Título principal */}
@@ -160,7 +158,7 @@ export const PetRegistrationForm: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Registra a tu mascota</h1>
           <div className="flex justify-center">
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-              <span className="text-2xl">🐱</span>
+              <img src={gatoRegistrar} alt="" />
             </div>
           </div>
         </div>

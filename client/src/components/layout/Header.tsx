@@ -21,7 +21,9 @@ export const Header: React.FC = () => {
           {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
             <button className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-              Inicio Rápido
+              <Link to = "/">
+              Inicio
+              </Link>
             </button>
             <button className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
               Reservas Online
@@ -51,10 +53,14 @@ export const Header: React.FC = () => {
           {/* Auth buttons */}
           <div className="flex items-center space-x-4">
             <Button variant="outline" size="sm">
-              Unirse
+              <Link to="/registration-page">
+                Unirse
+              </Link>
             </Button>
             <Button variant="primary" size="sm">
-              Iniciar sesión
+              <Link to="/login-page">
+                Iniciar sesión
+              </Link>
             </Button>
           </div>
         </div>
