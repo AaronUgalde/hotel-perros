@@ -21,6 +21,7 @@ router.post('/', requireAuth,
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
     const { nombre, especie, raza, tamano, peso_kg, fecha_nacimiento, sexo, tipo_pelo, numero_chip, tipo_chip, notas_adicionales } = req.body;
+    console.log("Estoy entrando aqui")
     try {
       const q = `INSERT INTO pets (owner_id, nombre, especie, raza, tamano, peso_kg, fecha_nacimiento, sexo, tipo_pelo, numero_chip, tipo_chip, notas_adicionales)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`;

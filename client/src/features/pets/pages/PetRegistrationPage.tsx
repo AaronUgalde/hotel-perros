@@ -8,8 +8,8 @@ import { VaccineTable, type Vaccine } from '../../../components/ui/VaccineTable'
 import { ChipSection } from '../../../components/ui/ChipSection';
 import Select  from '../../../components/ui/Select';
 import { Header } from '../../../components/layout/Header';
-import { Footer } from '../../../components/layout/Footer';
 import gatoRegistrar from '../../../assets/gato_registrar.png'
+import api from '../../../lib/api';
 
 // Interfaces para tipos de datos
 interface PetFormData {
@@ -43,11 +43,18 @@ const formOptions = {
     { value: 'perro', label: 'Perro' },
     { value: 'gato', label: 'Gato' }
   ],
-  breeds: [
-    { value: 'poodle', label: 'Poodle' },
-    { value: 'labrador', label: 'Labrador' },
-    { value: 'golden', label: 'Golden Retriever' }
-  ],
+  breeds: {
+    perro: [
+      { value: 'poodle', label: 'Poodle' },
+      { value: 'labrador', label: 'Labrador' },
+      { value: 'golden', label: 'Golden Retriever' }
+    ],
+    gato: [
+      { value: 'siames', label: 'Siames' },
+      { value: 'persa', label: 'Persa' },
+      { value: 'bengala', label: 'Bengala' }
+    ]
+  },
   sizes: [
     { value: 'chico', label: 'Chico' },
     { value: 'mediano', label: 'Mediano' },
@@ -136,16 +143,51 @@ export const PetRegistrationForm: React.FC = () => {
   };
 
   // Handler para envío del formulario
-  const handleSubmit = () => {
-    const formData = {
-      petData,
-      chipData,
-      vaccines,
-      files,
-    };
-    
-    console.log('Datos del formulario:', formData);
-    alert('Mascota registrada con éxito!');
+   const handleSubmit = async () => {
+    try {
+      // Primero, registrar la mascota
+      const petPayload = {
+        nombre: petData.petName,
+        especie: petData.species,
+        raza: petData.breed,
+        tamano: petData.size,
+        peso_kg: petData.weight,
+        fecha_nacimiento: petData.birthDate,
+        sexo: petData.sex,
+        tipo_pelo: petData.coatType,
+        notas_adicionales: petData.additionalNotes,
+      };
+
+      const petResponse = await api.post('/pets', petPayload);
+      const pet = petResponse.data;
+      const petId = pet.pet_id;
+
+      // Luego, chequear y subir cada documento si existe
+      const uploadDocument = async (file: File, tipo_doc: string) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('tipo_doc', tipo_doc);
+        await api.post(`/pet-docs/${petId}/upload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      };
+
+      if (files.sterilizationCert) {
+        await uploadDocument(files.sterilizationCert, 'esterilizacion');
+      }
+      if (files.vaccinationCert) {
+        await uploadDocument(files.vaccinationCert, 'vacunacion');
+      }
+      if (files.photosArchive) {
+        await uploadDocument(files.photosArchive, 'fotos');
+      }
+
+      console.log('Datos del formulario:', { petData, chipData, vaccines, files });
+      alert('Mascota registrada con éxito!');
+    } catch (error) {
+      console.error(error);
+      alert('Error al registrar la mascota');
+    }
   };
 
   return (
@@ -166,82 +208,99 @@ export const PetRegistrationForm: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Sección izquierda - Datos básicos */}
           <FormSection 
-            title="Datos indispensables de su perro"
+            title="Datos indispensables de su mascota"
             className="h-fit"
           >
             <Input
               label="Nombre del animal"
               value={petData.petName}
               onChange={(value) => handlePetDataChange('petName', value)}
-              placeholder="Ingrese el nombre del perro"
+              placeholder="Ingrese el nombre del animal"
               required
             />
 
-            <label className="block">
-  <span className="text-sm font-medium">Raza del animal</span>
-  <Select
-    options={formOptions.breeds}
-    value={petData.breed}
-    onChange={(value) => handlePetDataChange('breed', value as string)}
-    placeholder="Seleccionar raza"
-    variant="outline"
-    size="md"
-    className="mt-1"
-  />
-</label>
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Especie</span>
+              <Select
+                options={formOptions.species}
+                value={petData.species}
+                onChange={(value) => {
+                  handlePetDataChange('species', value as string);
+                  handlePetDataChange('breed', ''); // Resetear raza al cambiar especie
+                }}
+                placeholder="Seleccionar especie"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
 
-<label className="block mt-4">
-  <span className="text-sm font-medium">Tamaño del animal</span>
-  <Select
-    options={formOptions.sizes}
-    value={petData.size}
-    onChange={(value) => handlePetDataChange('size', value as string)}
-    placeholder="Seleccionar tamaño"
-    variant="outline"
-    size="md"
-    className="mt-1"
-  />
-</label>
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Raza del animal</span>
+              <Select
+                options={
+                  petData.species
+                    ? formOptions.breeds[petData.species as keyof typeof formOptions.breeds]
+                    : []
+                }
+                value={petData.breed}
+                onChange={(value) => handlePetDataChange('breed', value as string)}
+                placeholder="Seleccionar raza"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
 
-<label className="block mt-4">
-  <span className="text-sm font-medium">Peso</span>
-  <Select
-    options={formOptions.weights}
-    value={petData.weight}
-    onChange={(value) => handlePetDataChange('weight', value as string)}
-    placeholder="Seleccionar peso"
-    variant="outline"
-    size="md"
-    className="mt-1"
-  />
-</label>
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Tamaño del animal</span>
+              <Select
+                options={formOptions.sizes}
+                value={petData.size}
+                onChange={(value) => handlePetDataChange('size', value as string)}
+                placeholder="Seleccionar tamaño"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
 
-<label className="block mt-4">
-  <span className="text-sm font-medium">Sexo</span>
-  <Select
-    options={formOptions.sexes}
-    value={petData.sex}
-    onChange={(value) => handlePetDataChange('sex', value as string)}
-    placeholder="Seleccionar sexo"
-    variant="outline"
-    size="md"
-    className="mt-1"
-  />
-</label>
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Peso (kg)</span>
+              <Input
+                type="number"
+                value={petData.weight}
+                onChange={(value) => handlePetDataChange('weight', value)}
+                placeholder="Ingrese el peso en kg"
+                className="mt-1"
+              />
+            </label>
 
-<label className="block mt-4">
-  <span className="text-sm font-medium">Tipo de pelo</span>
-  <Select
-    options={formOptions.coatTypes}
-    value={petData.coatType}
-    onChange={(value) => handlePetDataChange('coatType', value as string)}
-    placeholder="Seleccionar tipo de pelo"
-    variant="outline"
-    size="md"
-    className="mt-1"
-  />
-</label>
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Sexo</span>
+              <Select
+                options={formOptions.sexes}
+                value={petData.sex}
+                onChange={(value) => handlePetDataChange('sex', value as string)}
+                placeholder="Seleccionar sexo"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
 
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Tipo de pelo</span>
+              <Select
+                options={formOptions.coatTypes}
+                value={petData.coatType}
+                onChange={(value) => handlePetDataChange('coatType', value as string)}
+                placeholder="Seleccionar tipo de pelo"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
 
             <Input
               label="Fecha de nacimiento"
@@ -259,7 +318,7 @@ export const PetRegistrationForm: React.FC = () => {
 
             <FileUpload
               label="Fotos de su mascota en un archivo PDF"
-              description="Agregar un archivo PDF con 3 fotos de su perro lateral y de frente"
+              description="Agregar un archivo PDF con 3 fotos de su mascota (lateral y de frente)"
               accept=".pdf"
               maxSize={10}
               onChange={(file) => handleFileChange('photosArchive', file)}
@@ -270,7 +329,7 @@ export const PetRegistrationForm: React.FC = () => {
           <div className="space-y-6">
             {/* Certificado de esterilización */}
             <FormSection
-              title="Certificado esterilización de su mascota"
+              title="Certificado de esterilización de su mascota"
               description="Si no tiene el certificado de esterilización puede descargar el certificado en nuestras instalaciones con un costo extra."
             >
               <FileUpload

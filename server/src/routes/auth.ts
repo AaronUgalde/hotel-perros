@@ -45,41 +45,105 @@ function getCookieMaxAgeMs(remember?: boolean) {
  */
 router.post(
   '/register',
-  body('email').isEmail(),
-  body('password').isLength({ min: 6 }),
+  [
+    body('email').isEmail(),
+    body('password').isLength({ min: 6 }),
+    body('telefonoPrincipal').isNumeric(),
+    // Puedes agregar validaciones para tipo_domicilio, calle, colonia, etc.
+  ],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
 
-    const { email, password, nombre, apellido_paterno, apellido_materno, remember } = req.body;
+    const {
+      email,
+      password,
+      nombre,
+      apellido_paterno,
+      apellido_materno,
+      tipo_domicilio,
+      calle,
+      colonia,
+      ciudad,
+      estado,
+      codigo_postal,
+      numero_exterior,
+      numero_interior,
+      telefonoPrincipal,
+      telefonosEmergencia, // se espera un arreglo de teléfonos
+      remember,
+    } = req.body;
+
     try {
+      // Iniciar transacción
+      await db.query('BEGIN');
+
       const pwHash = await hashPassword(password);
-
-      const insertQuery = `
-        INSERT INTO owners (email, password_hash, nombre, apellido_paterno, apellido_materno)
-        VALUES ($1, $2, $3, $4, $5)
+      const insertOwnerQuery = `
+        INSERT INTO owners (
+          email, password_hash, nombre, apellido_paterno, apellido_materno,
+          tipo_domicilio, calle, colonia, ciudad, estado, codigo_postal,
+          numero_exterior, numero_interior
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
         RETURNING owner_id, email, nombre, apellido_paterno, apellido_materno, role;
-      `; // TODO: Cambiar para que el registro meta todos los campos necesarios
-      const result = await db.query(insertQuery, [email, pwHash, nombre, apellido_paterno, apellido_materno]);
-      const owner = result.rows[0];
+      `;
+      const ownerResult = await db.query(insertOwnerQuery, [
+        email,
+        pwHash,
+        nombre,
+        apellido_paterno,
+        apellido_materno,
+        tipo_domicilio,
+        calle,
+        colonia,
+        ciudad,
+        estado,
+        codigo_postal,
+        numero_exterior,
+        numero_interior,
+      ]);
+      const owner = ownerResult.rows[0];
 
+      // Insertar teléfono principal
+      const insertMainPhoneQuery = `
+        INSERT INTO owner_phones (owner_id, numero, etiqueta, es_principal)
+        VALUES ($1, $2, $3, true)
+      `;
+      await db.query(insertMainPhoneQuery, [owner.owner_id, telefonoPrincipal, '']);
+
+      // Si vienen teléfonos de emergencia, se insertan (se ignoran valores vacíos)
+      if (Array.isArray(telefonosEmergencia)) {
+        const insertEmergencyPhoneQuery = `
+          INSERT INTO owner_phones (owner_id, numero, etiqueta, es_principal)
+          VALUES ($1, $2, $3, false)
+        `;
+        for (const phone of telefonosEmergencia) {
+          if (phone) {
+            await db.query(insertEmergencyPhoneQuery, [owner.owner_id, phone, '']);
+          }
+        }
+      }
+
+      // Generar token y setear cookie
       const payload = { owner_id: owner.owner_id, role: owner.role };
       const token = jwt.sign(payload, getJwtSecret(), signOptions);
-
       const maxAge = getCookieMaxAgeMs(remember);
-
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', // considerar 'strict' o 'none' según tu despliegue
+        sameSite: 'lax',
         ...(maxAge ? { maxAge } : {}),
       });
 
+      // Confirmar transacción
+      await db.query('COMMIT');
       res.status(201).json({ owner });
     } catch (err: any) {
-      if (err?.code === '23505') {
+      // Revertir en caso de error
+      await db.query('ROLLBACK');
+      if (err?.code === '23505')
         return res.status(400).json({ error: 'Email ya registrado' });
-      }
       console.error(err);
       res.status(500).json({ error: 'Error del servidor' });
     }

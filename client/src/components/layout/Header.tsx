@@ -8,7 +8,7 @@ export const Header: React.FC = () => {
   const { user, logout } = useAuth();
 
   const petInfoItems = [
-    { label: 'Agregar mascota', href: '/pets/add' },
+    { label: 'Agregar mascota', href: '/registrar-mascota' },
     { label: 'Editar información', href: '/pets/edit' },
   ];
 

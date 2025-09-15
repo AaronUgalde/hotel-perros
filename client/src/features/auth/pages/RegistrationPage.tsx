@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '../../../components/ui/Input';
 import { FormSection } from '../../../components/ui/FormSection';
 import { Button } from '../../../components/ui/Button';
@@ -19,8 +20,8 @@ interface RegistrationForm {
   ciudad: string;
   estado: string;
   codigoPostal: string;
-  numeroExterior1: string;
-  numeroExterior2: string;
+  numeroExterior: string;
+  numeroInterior: string;
   telefonosEmergencia: string[];
 }
 
@@ -39,8 +40,8 @@ export const RegistrationPage: React.FC = () => {
     ciudad: '',
     estado: '',
     codigoPostal: '',
-    numeroExterior1: '',
-    numeroExterior2: '',
+    numeroExterior: '',
+    numeroInterior: '',
     telefonosEmergencia: ['', '', '', '', '']
   });
 
@@ -67,7 +68,7 @@ export const RegistrationPage: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
@@ -82,12 +83,24 @@ export const RegistrationPage: React.FC = () => {
       nombre: form.nombre,
       apellido_paterno: form.primerApellido,
       apellido_materno: form.segundoApellido,
+      tipo_domicilio: form.tipoDomicilio,
+      calle: form.calle,
+      colonia: form.colonia,
+      ciudad: form.ciudad,
+      estado: form.estado,
+      codigo_postal: form.codigoPostal,
+      numero_exterior: form.numeroExterior,
+      numero_interior: form.numeroInterior,
+      telefonoPrincipal: form.telefonoPrincipal,
+      telefonosEmergencia: form.telefonosEmergencia.filter(phone => phone.trim() !== ""),
     };
+
+    const navigate = useNavigate();
 
     try {
       const res = await api.post('/auth/register', payload);
       console.log("Registro exitoso:", res.data);
-      // Realiza acciones adicionales, tal vez redireccionar o mostrar mensaje
+      navigate('/LoginContainer')
     } catch (err) {
       console.error(err);
       alert("Error al registrarse");
@@ -220,16 +233,16 @@ export const RegistrationPage: React.FC = () => {
                   
                   <Input
                     label="Numero exterior"
-                    value={form.numeroExterior1}
-                    onChange={(value) => updateField('numeroExterior1', value)}
+                    value={form.numeroExterior}
+                    onChange={(value) => updateField('numeroExterior', value)}
                     placeholder="Ingresa tu numero exterior"
                   />
                   
                   <div className="md:col-span-2">
                     <Input
-                      label="Numero exterior"
-                      value={form.numeroExterior2}
-                      onChange={(value) => updateField('numeroExterior2', value)}
+                      label="Numero interior"
+                      value={form.numeroInterior}
+                      onChange={(value) => updateField('numeroInterior', value)}
                       placeholder="Ingresa tu numero exterior"
                     />
                   </div>
