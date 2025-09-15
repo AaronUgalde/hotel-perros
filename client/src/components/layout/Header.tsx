@@ -2,8 +2,11 @@ import React from 'react';
 import { Button } from '../ui/Button';
 import { Dropdown } from '../ui/Dropdown';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const Header: React.FC = () => {
+  const { user, logout } = useAuth();
+
   const petInfoItems = [
     { label: 'Agregar mascota', href: '/pets/add' },
     { label: 'Editar información', href: '/pets/edit' },
@@ -20,48 +23,53 @@ export const Header: React.FC = () => {
 
           {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <button className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
-              <Link to = "/">
+            <Link to="/" className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
               Inicio
-              </Link>
-            </button>
-            <button className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+            </Link>
+            <span className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
               Reservas Online
-            </button>
-            <button className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
+            </span>
+            <span className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
               Contacto Aquí
-            </button>
-            <Dropdown
-              trigger={
-                <span className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium flex items-center">
-                  <Link to="/registrar-mascota">
-                    Agregar o editar información de tus mascotas
-                  </Link>
-                  <svg className="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-              }
-              items={petInfoItems}
-            />
+            </span>
+            {user && (
+              <Dropdown
+                trigger={
+                  <span className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium flex items-center">
+                    Mis Mascotas
+                    <svg className="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                }
+                items={petInfoItems}
+              />
+            )}
           </nav>
 
           {/* Auth buttons */}
           <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              <Link to="/registration-page">
-                Unirse
-              </Link>
-            </Button>
-            <Button variant="primary" size="sm">
-              <Link to="/login-page">
-                Iniciar sesión
-              </Link>
-            </Button>
+            {!user ? (
+              <>
+                <Button variant="outline" size="sm">
+                  <Link to="/registration-page">Unirse</Link>
+                </Button>
+                <Button variant="primary" size="sm">
+                  <Link to="/login-page">Iniciar sesión</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-gray-700 text-sm">Hola, {user.nombre}</span>
+                <Button variant="outline" size="sm" onClick={logout}>
+                  Cerrar sesión
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

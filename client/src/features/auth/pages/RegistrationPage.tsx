@@ -3,6 +3,7 @@ import { Input } from '../../../components/ui/Input';
 import { FormSection } from '../../../components/ui/FormSection';
 import { Button } from '../../../components/ui/Button';
 import PerroLogin from '../../../assets/perro_dueño_login.png'
+import api from '../../../lib/api';
 
 interface RegistrationForm {
   email: string;
@@ -66,9 +67,31 @@ export const RegistrationPage: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', form);
+
+    if (form.password !== form.confirmPassword) {
+      alert("Las contraseñas no coinciden");
+      return;
+    }
+
+    // Mapea los campos del formulario a lo que espera el backend
+    const payload = {
+      email: form.email,
+      password: form.password,
+      nombre: form.nombre,
+      apellido_paterno: form.primerApellido,
+      apellido_materno: form.segundoApellido,
+    };
+
+    try {
+      const res = await api.post('/auth/register', payload);
+      console.log("Registro exitoso:", res.data);
+      // Realiza acciones adicionales, tal vez redireccionar o mostrar mensaje
+    } catch (err) {
+      console.error(err);
+      alert("Error al registrarse");
+    }
   };
 
   return (

@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Eye, EyeOff } from 'lucide-react';
-import PerroLogin from '../../../assets/perro_dueño_login.png'
-
-// Simulando la importación de la imagen del gato
+import { useNavigate } from 'react-router-dom';
+import PerroLogin from '../../../assets/perro_dueño_login.png';
 
 interface LoginPageProps {
-  onLogin?: (email: string, password: string, rememberMe: boolean) => void;
+  onLogin?: (email: string, password: string, rememberMe: boolean) => Promise<void> | void;
   onRegister?: () => void;
 }
 
@@ -16,11 +15,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => 
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (onLogin) {
-      onLogin(email, password, rememberMe);
+      await onLogin(email, password, rememberMe);
     }
+    // Redirige al landing page después de logearse
+    navigate('/');
   };
 
   const handleForgotPassword = () => {
@@ -36,7 +38,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => 
   return (
     <div className="min-h-screen bg-whithe flex items-center justify-center p-4">
       <div className="w-full max-w-6xl flex items-center justify-between gap-8">
-        
         {/* Logo */}
         <div className="absolute top-8 left-8">
           <h1 className="text-xl font-bold text-gray-900">Your Logo</h1>
@@ -45,7 +46,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => 
         {/* Login Form Section */}
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            
             {/* Welcome Header */}
             <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">Bienvenido</h2>
@@ -57,7 +57,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => 
 
             {/* Login Form */}
             <div className="space-y-6">
-              
               {/* Email Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
