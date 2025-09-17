@@ -107,20 +107,20 @@ router.post(
 
       // Insertar teléfono principal
       const insertMainPhoneQuery = `
-        INSERT INTO owner_phones (owner_id, numero, etiqueta, es_principal)
-        VALUES ($1, $2, $3, true)
+        INSERT INTO owner_phones (owner_id, numero, es_principal)
+        VALUES ($1, $2, true)
       `;
-      await db.query(insertMainPhoneQuery, [owner.owner_id, telefonoPrincipal, '']);
+      await db.query(insertMainPhoneQuery, [owner.owner_id, telefonoPrincipal]);
 
       // Si vienen teléfonos de emergencia, se insertan (se ignoran valores vacíos)
       if (Array.isArray(telefonosEmergencia)) {
         const insertEmergencyPhoneQuery = `
-          INSERT INTO owner_phones (owner_id, numero, etiqueta, es_principal)
-          VALUES ($1, $2, $3, false)
+          INSERT INTO owner_phones (owner_id, numero, es_principal)
+          VALUES ($1, $2, false)
         `;
         for (const phone of telefonosEmergencia) {
           if (phone) {
-            await db.query(insertEmergencyPhoneQuery, [owner.owner_id, phone, '']);
+            await db.query(insertEmergencyPhoneQuery, [owner.owner_id, phone]);
           }
         }
       }
