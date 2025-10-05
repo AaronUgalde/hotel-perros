@@ -26,7 +26,6 @@ interface RegistrationForm {
 }
 
 export const RegistrationPage: React.FC = () => {
-  const navigate = useNavigate();
   const [form, setForm] = useState<RegistrationForm>({
     email: '',
     nombre: '',
@@ -96,10 +95,12 @@ export const RegistrationPage: React.FC = () => {
       telefonosEmergencia: form.telefonosEmergencia.filter(phone => phone.trim() !== ""),
     };
 
+    const navigate = useNavigate();
+
     try {
       const res = await api.post('/auth/register', payload);
       console.log("Registro exitoso:", res.data);
-      navigate('/login-page');
+      navigate('/LoginContainer')
     } catch (err) {
       console.error(err);
       alert("Error al registrarse");
