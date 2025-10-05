@@ -10,6 +10,8 @@ import phoneRoutes from './routes/phones';
 import petRoutes from './routes/pets';
 import docRoutes from './routes/documents';
 import vacRoutes from './routes/vaccinations';
+import diseases from './routes/diseases';
+import directions from './routes/directions';
 
 const app = express();
 app.use(cors({
@@ -25,6 +27,8 @@ app.use('/api/phones', phoneRoutes);
 app.use('/api/pets', petRoutes);
 app.use('/api/pet-docs', docRoutes);
 app.use('/api/pet-vaccinations', vacRoutes);
+app.use('/api/diseases', diseases);
+app.use('/api/directions', directions);
 
 // health
 app.get('/health', (_req, res) => res.json({ ok: true }));

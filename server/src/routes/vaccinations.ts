@@ -5,72 +5,163 @@ import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
-// List vaccinations for a pet
-router.get('/:petId', requireAuth, async (req: AuthRequest, res) => {
+/**
+ * Listar vacunas de una mascota
+ * GET /:mascotaId
+ */
+router.get('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const petId = req.params.petId;
-    const check = await db.query('SELECT pet_id FROM pets WHERE pet_id = $1 AND owner_id = $2', [petId, req.user!.owner_id]);
-    if (check.rowCount === 0) return res.status(404).json({ error: 'Pet no encontrado' });
-    const r = await db.query('SELECT * FROM pet_vaccinations WHERE pet_id = $1 ORDER BY fecha_aplicacion DESC', [petId]);
+    const mascotaId = Number(req.params.mascotaId);
+    // Verificar que la mascota pertenece al propietario autenticado
+    const check = await db.query(
+      'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
+      [mascotaId, req.user!.id_propietario]
+    );
+    if (check.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al propietario' });
+
+    const r = await db.query(
+      `SELECT vacuna_mascota_id, mascota_id, vacuna_id, nombre_vacuna, fecha_aplicacion, vigencia_hasta, veterinario, notas
+       FROM public.vacunas_mascotas
+       WHERE mascota_id = $1
+       ORDER BY fecha_aplicacion DESC`,
+      [mascotaId]
+    );
     res.json(r.rows);
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Error del servidor' }); }
+  } catch (err) {
+    console.error('List vaccinations error:', err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
 });
 
-// Add vaccination
-router.post('/:petId', requireAuth,
-  body('nombre_vacuna').isString(),
+/**
+ * Agregar vacunación
+ * POST /:mascotaId
+ */
+router.post(
+  '/:mascotaId',
+  requireAuth,
+  body('nombre_vacuna').optional().isString(),
+  body('vacuna_id').optional().isInt(),
+  body('fecha_aplicacion').optional().isISO8601(),
+  body('vigencia_hasta').optional().isISO8601(),
+  body('veterinario').optional().isString(),
+  body('notas').optional().isString(),
   async (req: AuthRequest, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-    try {
-      const petId = req.params.petId;
-      const { nombre_vacuna, fecha_aplicacion, vigencia, veterinario } = req.body;
-      const check = await db.query('SELECT pet_id FROM pets WHERE pet_id = $1 AND owner_id = $2', [petId, req.user!.owner_id]);
-      if (check.rowCount === 0) return res.status(404).json({ error: 'Pet no encontrado' });
 
-      const q = `INSERT INTO pet_vaccinations (pet_id, nombre_vacuna, fecha_aplicacion, vigencia, veterinario)
-        VALUES ($1,$2,$3,$4,$5) RETURNING *`;
-      const r = await db.query(q, [petId, nombre_vacuna, fecha_aplicacion, vigencia, veterinario]);
+    try {
+      const mascotaId = Number(req.params.mascotaId);
+      const { nombre_vacuna, vacuna_id, fecha_aplicacion, vigencia_hasta, veterinario, notas } = req.body;
+
+      // Verificar pertenencia
+      const check = await db.query(
+        'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
+        [mascotaId, req.user!.id_propietario]
+      );
+      if (check.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al propietario' });
+
+      const q = `
+        INSERT INTO public.vacunas_mascotas
+          (mascota_id, vacuna_id, nombre_vacuna, fecha_aplicacion, vigencia_hasta, veterinario, notas)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        RETURNING vacuna_mascota_id, mascota_id, vacuna_id, nombre_vacuna, fecha_aplicacion, vigencia_hasta, veterinario, notas
+      `;
+      const r = await db.query(q, [
+        mascotaId,
+        vacuna_id ?? null,
+        nombre_vacuna ?? null,
+        fecha_aplicacion ?? null,
+        vigencia_hasta ?? null,
+        veterinario ?? null,
+        notas ?? null,
+      ]);
       res.status(201).json(r.rows[0]);
-    } catch (err) { console.error(err); res.status(500).json({ error: 'Error del servidor' }); }
+    } catch (err) {
+      console.error('Add vaccination error:', err);
+      res.status(500).json({ error: 'Error del servidor' });
+    }
   }
 );
 
-// Update and delete vaccination
-router.put('/:petId/:vacId', requireAuth, async (req: AuthRequest, res) => {
+/**
+ * Actualizar vacunación
+ * PUT /:mascotaId/:vacunaId
+ */
+router.put('/:mascotaId/:vacunaId', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const petId = req.params.petId;
-    const vacId = req.params.vacId;
-    // ensure pet belongs to owner
-    const check = await db.query('SELECT pet_id FROM pets WHERE pet_id = $1 AND owner_id = $2', [petId, req.user!.owner_id]);
-    if (check.rowCount === 0) return res.status(404).json({ error: 'Pet no encontrado' });
+    const mascotaId = Number(req.params.mascotaId);
+    const vacunaId = Number(req.params.vacunaId);
 
-    const fields = ['nombre_vacuna','fecha_aplicacion','vigencia','veterinario'];
-    const sets = [];
-    const vals = [];
+    // Verificar pertenencia de la mascota
+    const check = await db.query(
+      'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
+      [mascotaId, req.user!.id_propietario]
+    );
+    if (check.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al propietario' });
+
+    // Campos permitidos para actualizar y su mapping al nombre real en la tabla
+    const allowed: { [k: string]: string } = {
+      nombre_vacuna: 'nombre_vacuna',
+      vacuna_id: 'vacuna_id',
+      fecha_aplicacion: 'fecha_aplicacion',
+      vigencia_hasta: 'vigencia_hasta',
+      veterinario: 'veterinario',
+      notas: 'notas',
+    };
+
+    const sets: string[] = [];
+    const vals: any[] = [];
     let idx = 1;
-    for (const f of fields) {
-      if (req.body[f] !== undefined) { sets.push(`${f} = $${idx++}`); vals.push(req.body[f]); }
+    for (const key of Object.keys(allowed)) {
+      if (req.body[key] !== undefined) {
+        sets.push(`${allowed[key]} = $${idx++}`);
+        vals.push(req.body[key]);
+      }
     }
+
     if (sets.length === 0) return res.status(400).json({ error: 'Nada que actualizar' });
-    vals.push(vacId, petId);
-    const sql = `UPDATE pet_vaccinations SET ${sets.join(', ')} WHERE vac_id = $${idx++} AND pet_id = $${idx} RETURNING *`;
+
+    // Condición: vacuna_mascota_id = $n AND mascota_id = $m
+    vals.push(vacunaId, mascotaId);
+    const sql = `UPDATE public.vacunas_mascotas SET ${sets.join(', ')} WHERE vacuna_mascota_id = $${idx++} AND mascota_id = $${idx} RETURNING *`;
     const r = await db.query(sql, vals);
     if (r.rowCount === 0) return res.status(404).json({ error: 'Vacunación no encontrada' });
+
     res.json(r.rows[0]);
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Error del servidor' }); }
+  } catch (err) {
+    console.error('Update vaccination error:', err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
 });
 
-router.delete('/:petId/:vacId', requireAuth, async (req: AuthRequest, res) => {
+/**
+ * Eliminar vacunación
+ * DELETE /:mascotaId/:vacunaId
+ */
+router.delete('/:mascotaId/:vacunaId', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const petId = req.params.petId;
-    const vacId = req.params.vacId;
-    const check = await db.query('SELECT pet_id FROM pets WHERE pet_id = $1 AND owner_id = $2', [petId, req.user!.owner_id]);
-    if (check.rowCount === 0) return res.status(404).json({ error: 'Pet no encontrado' });
-    const r = await db.query('DELETE FROM pet_vaccinations WHERE vac_id = $1 AND pet_id = $2 RETURNING *', [vacId, petId]);
+    const mascotaId = Number(req.params.mascotaId);
+    const vacunaId = Number(req.params.vacunaId);
+
+    // Verificar pertenencia de la mascota
+    const check = await db.query(
+      'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
+      [mascotaId, req.user!.id_propietario]
+    );
+    if (check.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al propietario' });
+
+    const r = await db.query(
+      'DELETE FROM public.vacunas_mascotas WHERE vacuna_mascota_id = $1 AND mascota_id = $2 RETURNING vacuna_mascota_id',
+      [vacunaId, mascotaId]
+    );
     if (r.rowCount === 0) return res.status(404).json({ error: 'Vacunación no encontrada' });
+
     res.json({ success: true });
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Error del servidor' }); }
+  } catch (err) {
+    console.error('Delete vaccination error:', err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
 });
 
 export default router;

@@ -5,49 +5,74 @@ import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
-// Get profile (owner)
+/**
+ * GET /me
+ * Devuelve datos del propietario únicamente
+ */
 router.get('/me', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const q = `SELECT owner_id, email, nombre, apellido_paterno, apellido_materno, tipo_domicilio, calle,
-      colonia, ciudad, estado, codigo_postal, numero_exterior, numero_interior, role
-      FROM owners WHERE owner_id = $1`;
-    const r = await db.query(q, [req.user!.owner_id]);
-    res.json(r.rows[0]);
+    const propietarioId = req.user!.id_propietario;
+
+    const q = `
+      SELECT
+        propietario_id,
+        correo_electronico,
+        nombre,
+        primer_apellido,
+        segundo_apellido,
+        rol_id
+      FROM public.propietarios
+      WHERE propietario_id = $1
+    `;
+    const r = await db.query(q, [propietarioId]);
+    if (r.rowCount === 0) return res.status(404).json({ error: 'Propietario no encontrado' });
+
+    const propietario = r.rows[0];
+    res.json({ propietario });
   } catch (err) {
-    console.error(err);
+    console.error('GET /me error:', err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// Update profile
-router.put('/me', requireAuth,
+/**
+ * PUT /me
+ * Actualiza solo los datos del propietario
+ */
+router.put(
+  '/me',
+  requireAuth,
   body('nombre').optional().isString(),
+  body('primer_apellido').optional().isString(),
+  body('segundo_apellido').optional().isString(),
   async (req: AuthRequest, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const ownerId = req.user!.owner_id;
-    const fields = [
-      'nombre', 'apellido_paterno', 'apellido_materno', 'tipo_domicilio', 'calle', 'colonia',
-      'ciudad', 'estado', 'codigo_postal', 'numero_exterior', 'numero_interior'
-    ];
-    const updates: string[] = [];
+    const propietarioId = req.user!.id_propietario;
+    const fields = ['nombre', 'primer_apellido', 'segundo_apellido'];
+    const sets: string[] = [];
     const values: any[] = [];
     let idx = 1;
+
     for (const f of fields) {
       if (req.body[f] !== undefined) {
-        updates.push(`${f} = $${idx++}`);
+        sets.push(`${f} = $${idx++}`);
         values.push(req.body[f]);
       }
     }
-    if (updates.length === 0) return res.status(400).json({ error: 'Nada que actualizar' });
-    values.push(ownerId);
-    const sql = `UPDATE owners SET ${updates.join(', ')} WHERE owner_id = $${idx} RETURNING owner_id, email, nombre, apellido_paterno, apellido_materno`;
+
+    if (sets.length === 0) return res.status(400).json({ error: 'Nada que actualizar' });
+
+    values.push(propietarioId);
+    const sql = `UPDATE public.propietarios SET ${sets.join(', ')} WHERE propietario_id = $${idx} RETURNING propietario_id, correo_electronico, nombre, primer_apellido, segundo_apellido, rol_id`;
+
     try {
       const r = await db.query(sql, values);
-      res.json(r.rows[0]);
+      if (r.rowCount === 0) return res.status(404).json({ error: 'Propietario no encontrado' });
+      res.json({ propietario: r.rows[0] });
     } catch (err) {
-      console.error(err);
+      console.error('PUT /me error:', err);
       res.status(500).json({ error: 'Error del servidor' });
     }
   }

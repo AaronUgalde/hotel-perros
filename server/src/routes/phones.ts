@@ -5,43 +5,102 @@ import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
-// List phones for owner
+/**
+ * Listar teléfonos del propietario autenticado
+ * GET /
+ */
 router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const r = await db.query('SELECT phone_id, numero, etiqueta, es_principal FROM owner_phones WHERE owner_id = $1 ORDER BY es_principal DESC', [req.user!.owner_id]);
+    const r = await db.query(
+      `SELECT telefono_id, numero, tipo_telefono_id, nombre_contacto, relacion_contacto, es_principal, notas
+       FROM public.telefonos_propietarios
+       WHERE propietario_id = $1
+       ORDER BY es_principal DESC, telefono_id`,
+      [req.user!.id_propietario]
+    );
     res.json(r.rows);
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Error del servidor' }); }
+  } catch (err) {
+    console.error('List phones error:', err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
 });
 
-// Add phone
-router.post('/', requireAuth,
-  body('numero').isNumeric(),
-  body('etiqueta').optional().isString(),
+/**
+ * Agregar teléfono
+ * POST /
+ */
+router.post(
+  '/',
+  requireAuth,
+  body('numero').isString().notEmpty(),
+  body('tipo_telefono_id').optional().isInt(),
+  body('nombre_contacto').optional().isString(),
+  body('relacion_contacto').optional().isString(),
+  body('es_principal').optional().isBoolean(),
+  body('notas').optional().isString(),
   async (req: AuthRequest, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { numero, etiqueta, es_principal } = req.body;
+    const propietarioId = req.user!.id_propietario;
+    const { numero, tipo_telefono_id, nombre_contacto, relacion_contacto, es_principal, notas } = req.body;
+
     try {
+      // Si este teléfono será el principal, desmarcar los demás primero
       if (es_principal) {
-        await db.query('UPDATE owner_phones SET es_principal = false WHERE owner_id = $1', [req.user!.owner_id]);
+        await db.query(
+          `UPDATE public.telefonos_propietarios SET es_principal = false WHERE propietario_id = $1 AND es_principal = true`,
+          [propietarioId]
+        );
       }
+
       const r = await db.query(
-        'INSERT INTO owner_phones (owner_id, numero, etiqueta, es_principal) VALUES ($1,$2,$3,$4) RETURNING *',
-        [req.user!.owner_id, numero, etiqueta || null, !!es_principal]
+        `INSERT INTO public.telefonos_propietarios
+          (propietario_id, numero, tipo_telefono_id, nombre_contacto, relacion_contacto, es_principal, notas)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)
+         RETURNING telefono_id, propietario_id, numero, tipo_telefono_id, nombre_contacto, relacion_contacto, es_principal, notas`,
+        [
+          propietarioId,
+          numero,
+          tipo_telefono_id ?? null,
+          nombre_contacto ?? null,
+          relacion_contacto ?? null,
+          !!es_principal,
+          notas ?? null,
+        ]
       );
+
       res.status(201).json(r.rows[0]);
-    } catch (err) { console.error(err); res.status(500).json({ error: 'Error del servidor' }); }
+    } catch (err) {
+      console.error('Add phone error:', err);
+      res.status(500).json({ error: 'Error del servidor' });
+    }
   }
 );
 
-// Delete phone
+/**
+ * Eliminar teléfono
+ * DELETE /:phoneId
+ */
 router.delete('/:phoneId', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const r = await db.query('DELETE FROM owner_phones WHERE phone_id = $1 AND owner_id = $2 RETURNING *', [req.params.phoneId, req.user!.owner_id]);
-    if (r.rowCount === 0) return res.status(404).json({ error: 'No encontrado' });
+    const propietarioId = req.user!.id_propietario;
+    const phoneId = Number(req.params.phoneId);
+
+    const r = await db.query(
+      `DELETE FROM public.telefonos_propietarios
+       WHERE telefono_id = $1 AND propietario_id = $2
+       RETURNING telefono_id`,
+      [phoneId, propietarioId]
+    );
+
+    if (r.rowCount === 0) return res.status(404).json({ error: 'No encontrado o no autorizado' });
+
     res.json({ success: true });
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Error del servidor' }); }
+  } catch (err) {
+    console.error('Delete phone error:', err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
 });
 
 export default router;
