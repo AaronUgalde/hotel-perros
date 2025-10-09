@@ -16,7 +16,7 @@ export const Section: React.FC<SectionProps> = ({
   const backgroundClasses = {
     white: 'bg-white',
     gray: 'bg-gray-50',
-    dark: 'bg-gray-900 text-white',
+    dark: 'bg-black text-white',
   };
 
   const paddingClasses = {

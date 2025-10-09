@@ -2,6 +2,7 @@ import express from 'express';
 import db from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { body, validationResult } from 'express-validator';
+import { Request, Response } from 'express';
 
 const router = express.Router();
 
@@ -21,6 +22,18 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
     res.json(r.rows);
   } catch (err) {
     console.error('List phones error:', err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/tipos_telefono', async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const q = `SELECT * FROM tipos_telefono`;
+    const r = await db.query(q);
+
+    res.json({ tipos_telefono: r.rows });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });

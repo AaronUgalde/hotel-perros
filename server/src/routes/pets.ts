@@ -1,7 +1,8 @@
 import express from 'express';
 import db from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
-import { body, validationResult } from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
+import { Request, Response } from 'express';
 
 const router = express.Router();
 
@@ -15,6 +16,94 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
+
+router.get('/sexos', async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const q = `SELECT * FROM sexos`;
+    const r = await db.query(q);
+
+    res.json({ sexos: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/patron_pelo', async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const q = `SELECT * FROM patron_pelo`;
+    const r = await db.query(q);
+
+    res.json({ patron_pelo: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/origen_mascota', async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const q = `SELECT * FROM origen_mascota`;
+    const r = await db.query(q);
+
+    res.json({ origen_mascota: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/funcion_mascota', async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const q = `SELECT * FROM funcion_mascota`;
+    const r = await db.query(q);
+
+    res.json({ funcion_mascota: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/colores', async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const q = `SELECT * FROM colores`;
+    const r = await db.query(q);
+
+    res.json({ colores: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+
+router.get('/especies', async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const q = `SELECT * FROM especies`;
+    const r = await db.query(q);
+
+    res.json({ especies: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/razas/:id_especie', param('id_especie').isString().isLength({ min: 1, max: 10 }), async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const id_especie: string = req.params.id_especie;
+    const q = `SELECT * FROM razas WHERE especie_id = $1`;
+    const r = await db.query(q, [id_especie]);
+
+    res.json({ razas: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+
 
 // --- Get pet by id ---
 router.get('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {

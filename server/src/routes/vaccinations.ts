@@ -1,7 +1,9 @@
 import express from 'express';
 import db from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
-import { body, validationResult } from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
+import { Request, Response } from 'express';
+
 
 const router = express.Router();
 
@@ -32,6 +34,20 @@ router.get('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
+
+router.get('/vacunas/:id_especie', param('id_especie').isString().isLength({ min: 1, max: 10 }), async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const id_especie: string = req.params.id_especie;
+    const q = `SELECT * FROM vacunas WHERE especie_id = $1`;
+    const r = await db.query(q, [id_especie]);
+
+    res.json({ vacunas: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 
 /**
  * Agregar vacunación

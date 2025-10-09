@@ -3,6 +3,7 @@ import { Button } from '../ui/Button';
 import { Dropdown } from '../ui/Dropdown';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import logo from '../../assets/logo.jpg'
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -17,8 +18,8 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center">
-            <div className="text-2xl font-bold text-gray-900">Logo</div>
+          <div className="flex items-center h-full object-cover">
+            <img src={logo} className='h-[90%] object-cover' />
           </div>
 
           {/* Navigation */}

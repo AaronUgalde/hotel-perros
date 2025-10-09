@@ -21,7 +21,7 @@ export interface AuthRequest extends Request {
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   const token = req.cookies?.token;
   if (!token) {
-    return res.status(401).json({ error: 'No autenticado' });
+    return res.status(401).json({ error: 'No estas autorizado' });
   }
 
   try {

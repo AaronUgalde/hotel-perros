@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import db from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
+import { Request, Response } from 'express';
 
 const router = express.Router();
 const uploadDir = process.env.UPLOAD_DIR || 'uploads';
@@ -49,6 +50,18 @@ router.post('/:mascotaId/upload', requireAuth, upload.single('file'), async (req
   } catch (err) {
     console.error('Upload error:', err);
     if (req.file && req.file.path) try { fs.unlinkSync(req.file.path); } catch(e) {}
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/tipos_documentos', async (req: Request, res: Response) => { // <-- Request normal
+  try {
+    const q = `SELECT * FROM tipos_documentos`;
+    const r = await db.query(q);
+
+    res.json({ tipos_documentos: r.rows });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
