@@ -6,13 +6,13 @@ dotenv.config();
 /**
  * El payload del JWT se basará en la estructura real:
  * {
- *   id_propietario: number,
+ *   propietario_id: number,
  *   rol_id: number,
  *   rol_nombre?: string
  * }
  */
 export interface AuthRequest extends Request {
-  user?: { id_propietario: number; rol_id: number; rol_nombre?: string };
+  user?: { propietario_id: number; rol_id: number; rol_nombre?: string };
 }
 
 /**
@@ -30,14 +30,14 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
     // Verificamos y obtenemos el payload
     const payload = jwt.verify(token, secret) as {
-      id_propietario: number;
+      propietario_id: number;
       rol_id: number;
       rol_nombre?: string;
     };
 
     // Guardamos los datos del usuario en la request
     req.user = {
-      id_propietario: payload.id_propietario,
+      propietario_id: payload.propietario_id,
       rol_id: payload.rol_id,
       rol_nombre: payload.rol_nombre,
     };

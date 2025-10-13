@@ -21,6 +21,22 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 /**
+ * Obtener tipos de documentos (DEBE IR ANTES de rutas con parámetros)
+ * GET /tipos_documentos
+ */
+router.get('/tipos_documentos', async (req: Request, res: Response) => {
+  try {
+    const q = `SELECT * FROM tipos_documentos`;
+    const r = await db.query(q);
+
+    res.json({ tipos_documentos: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+/**
  * Subir documento para una mascota
  * POST /:mascotaId/upload
  */
@@ -31,7 +47,7 @@ router.post('/:mascotaId/upload', requireAuth, upload.single('file'), async (req
   try {
     const petCheck = await db.query(
       'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
-      [mascotaId, req.user!.id_propietario]
+      [mascotaId, req.user!.propietario_id]
     );
     if (petCheck.rowCount === 0) {
       try { fs.unlinkSync(req.file.path); } catch (e) {}
@@ -54,18 +70,6 @@ router.post('/:mascotaId/upload', requireAuth, upload.single('file'), async (req
   }
 });
 
-router.get('/tipos_documentos', async (req: Request, res: Response) => { // <-- Request normal
-  try {
-    const q = `SELECT * FROM tipos_documentos`;
-    const r = await db.query(q);
-
-    res.json({ tipos_documentos: r.rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error del servidor' });
-  }
-});
-
 /**
  * Listar documentos de una mascota
  * GET /:mascotaId?tipo_documento_id=#
@@ -75,7 +79,7 @@ router.get('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {
     const mascotaId = req.params.mascotaId;
     const check = await db.query(
       'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
-      [mascotaId, req.user!.id_propietario]
+      [mascotaId, req.user!.propietario_id]
     );
     if (check.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al propietario' });
 
@@ -117,7 +121,7 @@ router.get('/download/:documentoId', requireAuth, async (req: AuthRequest, res) 
     if (r.rowCount === 0) return res.status(404).json({ error: 'Documento no encontrado' });
 
     const row = r.rows[0];
-    if (row.propietario_id !== req.user!.id_propietario) return res.status(403).json({ error: 'No autorizado' });
+    if (row.propietario_id !== req.user!.propietario_id) return res.status(403).json({ error: 'No autorizado' });
 
     const filePath = row.ruta_archivo;
     if (!filePath || !fs.existsSync(filePath)) return res.status(404).json({ error: 'Archivo no encontrado en servidor' });
@@ -148,7 +152,7 @@ router.delete('/:documentoId', requireAuth, async (req: AuthRequest, res) => {
     if (r.rowCount === 0) return res.status(404).json({ error: 'Documento no encontrado' });
 
     const row = r.rows[0];
-    if (row.propietario_id !== req.user!.id_propietario) return res.status(403).json({ error: 'No autorizado' });
+    if (row.propietario_id !== req.user!.propietario_id) return res.status(403).json({ error: 'No autorizado' });
 
     // Borrar registro de BD
     await db.query('DELETE FROM public.documentos_mascotas WHERE documento_id = $1', [documentoId]);

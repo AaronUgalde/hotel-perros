@@ -17,7 +17,7 @@ router.get('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {
     // Verificar que la mascota pertenece al propietario autenticado
     const check = await db.query(
       'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
-      [mascotaId, req.user!.id_propietario]
+      [mascotaId, req.user!.propietario_id]
     );
     if (check.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al propietario' });
 
@@ -73,7 +73,7 @@ router.post(
       // Verificar pertenencia
       const check = await db.query(
         'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
-        [mascotaId, req.user!.id_propietario]
+        [mascotaId, req.user!.propietario_id]
       );
       if (check.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al propietario' });
 
@@ -112,7 +112,7 @@ router.put('/:mascotaId/:vacunaId', requireAuth, async (req: AuthRequest, res) =
     // Verificar pertenencia de la mascota
     const check = await db.query(
       'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
-      [mascotaId, req.user!.id_propietario]
+      [mascotaId, req.user!.propietario_id]
     );
     if (check.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al propietario' });
 
@@ -163,7 +163,7 @@ router.delete('/:mascotaId/:vacunaId', requireAuth, async (req: AuthRequest, res
     // Verificar pertenencia de la mascota
     const check = await db.query(
       'SELECT mascota_id FROM public.mascotas WHERE mascota_id = $1 AND propietario_id = $2',
-      [mascotaId, req.user!.id_propietario]
+      [mascotaId, req.user!.propietario_id]
     );
     if (check.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al propietario' });
 

@@ -7,6 +7,32 @@ import { Request, Response } from 'express';
 const router = express.Router();
 
 /**
+ * GET /tipos
+ * Obtener catálogo de tipos de teléfono
+ */
+router.get('/tipos', async (req: Request, res: Response) => {
+  try {
+    const q = `SELECT tipo_telefono_id as id, nombre FROM tipos_telefono ORDER BY nombre`;
+    const r = await db.query(q);
+    res.json(r.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/tipos_telefono', async (req: Request, res: Response) => {
+  try {
+    const q = `SELECT * FROM tipos_telefono`;
+    const r = await db.query(q);
+    res.json({ tipos_telefono: r.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+/**
  * Listar teléfonos del propietario autenticado
  * GET /
  */
@@ -17,23 +43,11 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
        FROM public.telefonos_propietarios
        WHERE propietario_id = $1
        ORDER BY es_principal DESC, telefono_id`,
-      [req.user!.id_propietario]
+      [req.user!.propietario_id]
     );
     res.json(r.rows);
   } catch (err) {
     console.error('List phones error:', err);
-    res.status(500).json({ error: 'Error del servidor' });
-  }
-});
-
-router.get('/tipos_telefono', async (req: Request, res: Response) => { // <-- Request normal
-  try {
-    const q = `SELECT * FROM tipos_telefono`;
-    const r = await db.query(q);
-
-    res.json({ tipos_telefono: r.rows });
-  } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
@@ -55,7 +69,7 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const propietarioId = req.user!.id_propietario;
+    const propietarioId = req.user!.propietario_id;
     const { numero, tipo_telefono_id, nombre_contacto, relacion_contacto, es_principal, notas } = req.body;
 
     try {
@@ -97,7 +111,7 @@ router.post(
  */
 router.delete('/:phoneId', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const propietarioId = req.user!.id_propietario;
+    const propietarioId = req.user!.propietario_id;
     const phoneId = Number(req.params.phoneId);
 
     const r = await db.query(

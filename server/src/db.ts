@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { connect } from 'http2';
 dotenv.config();
 import { Pool } from 'pg';
 
@@ -8,5 +9,6 @@ const pool = new Pool({
 
 export default {
   query: (text: string, params?: any[]) => pool.query(text, params),
-  pool
+  pool,
+  connect: () => pool.connect()
 };

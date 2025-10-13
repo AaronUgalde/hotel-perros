@@ -38,7 +38,7 @@ router.get('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {
     const mascotaId = req.params.mascotaId;
 
     // verificar que la mascota pertenece al propietario
-    const checkPet = await db.query('SELECT mascota_id FROM mascotas WHERE mascota_id = $1 AND propietario_id = $2', [mascotaId, req.user!.id_propietario]);
+    const checkPet = await db.query('SELECT mascota_id FROM mascotas WHERE mascota_id = $1 AND propietario_id = $2', [mascotaId, req.user!.propietario_id]);
     if (checkPet.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada' });
 
     const r = await db.query(
@@ -72,7 +72,7 @@ router.post('/:mascotaId',
     const { enfermedad_id, fecha_diagnostico, observaciones, tratamiento } = req.body;
 
     try {
-      const checkPet = await db.query('SELECT mascota_id FROM mascotas WHERE mascota_id = $1 AND propietario_id = $2', [mascotaId, req.user!.id_propietario]);
+      const checkPet = await db.query('SELECT mascota_id FROM mascotas WHERE mascota_id = $1 AND propietario_id = $2', [mascotaId, req.user!.propietario_id]);
       if (checkPet.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada' });
 
       const r = await db.query(
@@ -130,7 +130,7 @@ router.put('/:mascotaId/:enfermedadMascotaId',
 router.delete('/:mascotaId/:enfermedadMascotaId', requireAuth, async (req: AuthRequest, res) => {
   const { mascotaId, enfermedadMascotaId } = req.params;
   try {
-    const checkPet = await db.query('SELECT mascota_id FROM mascotas WHERE mascota_id = $1 AND propietario_id = $2', [mascotaId, req.user!.id_propietario]);
+    const checkPet = await db.query('SELECT mascota_id FROM mascotas WHERE mascota_id = $1 AND propietario_id = $2', [mascotaId, req.user!.propietario_id]);
     if (checkPet.rowCount === 0) return res.status(404).json({ error: 'Mascota no encontrada' });
 
     const r = await db.query('DELETE FROM enfermedad_mascota WHERE enfermedad_mascota_id = $1 AND mascota_id = $2 RETURNING *', [enfermedadMascotaId, mascotaId]);

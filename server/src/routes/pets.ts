@@ -9,7 +9,7 @@ const router = express.Router();
 // --- List pets for owner ---
 router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const r = await db.query('SELECT * FROM mascotas WHERE propietario_id = $1 ORDER BY nombre', [req.user!.id_propietario]);
+    const r = await db.query('SELECT * FROM mascotas WHERE propietario_id = $1 ORDER BY nombre', [req.user!.propietario_id]);
     res.json(r.rows);
   } catch (err) {
     console.error(err);
@@ -110,7 +110,7 @@ router.get('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {
   try {
     const r = await db.query(
       'SELECT * FROM mascotas WHERE mascota_id = $1 AND propietario_id = $2',
-      [req.params.mascotaId, req.user!.id_propietario]
+      [req.params.mascotaId, req.user!.propietario_id]
     );
     if (r.rowCount === 0) return res.status(404).json({ error: 'No encontrado' });
     res.json(r.rows[0]);
@@ -166,7 +166,7 @@ router.post(
         RETURNING *
       `;
       const r = await db.query(q, [
-        req.user!.id_propietario, nombre, especie_id, raza_id || null, sexo_id || null,
+        req.user!.propietario_id, nombre, especie_id, raza_id || null, sexo_id || null,
         fecha_nacimiento || null, peso_kg || null, altura_cm || null, largo_cm || null,
         patron_pelo_id || null, color_principal_id || null, color_ojos_id || null,
         numero_chip || null, ruac || null, esterilizado ?? null, senas_particulares || null,
@@ -200,8 +200,8 @@ router.put('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {
   }
   if (sets.length === 0) return res.status(400).json({ error: 'Nada que actualizar' });
 
-  values.push(req.params.mascotaId, req.user!.id_propietario);
-  const sql = `UPDATE mascotas SET ${sets.join(', ')} WHERE mascota_id = $${idx++} AND propietario_id = $${idx} RETURNING *`;
+  values.push(req.params.mascotaId, req.user!.propietario_id);
+  const sql = `UPDATE mascotas SET ${sets.join(', ')} WHERE mascota_id = ${idx++} AND propietario_id = ${idx} RETURNING *`;
 
   try {
     const r = await db.query(sql, values);
@@ -216,7 +216,7 @@ router.put('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {
 // --- Delete pet ---
 router.delete('/:mascotaId', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const r = await db.query('DELETE FROM mascotas WHERE mascota_id = $1 AND propietario_id = $2 RETURNING *', [req.params.mascotaId, req.user!.id_propietario]);
+    const r = await db.query('DELETE FROM mascotas WHERE mascota_id = $1 AND propietario_id = $2 RETURNING *', [req.params.mascotaId, req.user!.propietario_id]);
     if (r.rowCount === 0) return res.status(404).json({ error: 'No encontrado' });
     res.json({ success: true });
   } catch (err) {

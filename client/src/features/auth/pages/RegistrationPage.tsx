@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, User, MapPin, Phone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import ownerService, { 
+  type TelefonoRegistro, 
+  type DireccionRegistro, 
+  type RegistroCompletoData 
+} from '../../../services/owner.service';
 
 interface Catalogo {
   id: number;
@@ -85,6 +91,10 @@ const Checkbox = ({ label, checked, onChange }: any) => (
 );
 
 const RegistroPropietario = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     correo_electronico: '',
     password: '',
@@ -119,49 +129,30 @@ const RegistroPropietario = () => {
   }, []);
 
   const cargarCatalogos = async () => {
-    // Simula la carga de catálogos desde tu API
-    // Reemplaza con: fetch('/api/tipos-telefono')
-    setTiposTelefono([
-      { id: 1, nombre: 'Móvil' },
-      { id: 2, nombre: 'Casa' },
-      { id: 3, nombre: 'Trabajo' },
-      { id: 4, nombre: 'Otro' },
-    ]);
+    try {
+      const [tiposTel, tiposDom, est] = await Promise.all([
+        ownerService.getTiposTelefono(),
+        ownerService.getTiposDomicilio(),
+        ownerService.getEstados(),
+      ]);
 
-    setTiposDomicilio([
-      { id: 1, nombre: 'Casa' },
-      { id: 2, nombre: 'Trabajo' },
-      { id: 3, nombre: 'Temporal' },
-      { id: 4, nombre: 'Otro' },
-    ]);
-
-    setEstados([
-      { id: 1, nombre: 'Ciudad de México' },
-      { id: 2, nombre: 'Estado de México' },
-      { id: 3, nombre: 'Jalisco' },
-    ]);
+      setTiposTelefono(tiposTel);
+      setTiposDomicilio(tiposDom);
+      setEstados(est);
+    } catch (err) {
+      console.error('Error cargando catálogos:', err);
+      setError('Error al cargar los catálogos. Por favor recarga la página.');
+    }
   };
 
   const buscarCodigoPostal = async (cp: string, direccionId?: string) => {
-    if (cp.length !== 5) return;
 
     setBuscandoCP(true);
     try {
-      // Reemplaza con tu endpoint: fetch(`/api/codigo-postal/${cp}`)
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const data = {
-        colonias: [
-          { id: 1, nombre: 'Centro' },
-          { id: 2, nombre: 'Roma Norte' },
-          { id: 3, nombre: 'Condesa' },
-        ],
-        municipio: 'Cuauhtémoc',
-        municipio_id: 1,
-        estado: 'Ciudad de México',
-        estado_id: 1,
-      };
+      const data = await ownerService.buscarCodigoPostal(cp);
 
+      console.log(data)
+      
       setColonias(data.colonias);
       
       if (direccionId) {
@@ -179,6 +170,7 @@ const RegistroPropietario = () => {
       }
     } catch (error) {
       console.error('Error buscando código postal:', error);
+      alert('No se encontró información para el código postal ingresado');
     } finally {
       setBuscandoCP(false);
     }
@@ -242,7 +234,7 @@ const RegistroPropietario = () => {
       municipio_id: '',
       fecha_inicio: '',
       fecha_fin: '',
-      es_predeterminada: false,
+      es_predeterminada: direcciones.length === 0,
       notas: '',
     };
     setDirecciones([...direcciones, nuevaDireccion]);
@@ -253,12 +245,15 @@ const RegistroPropietario = () => {
   };
 
   const actualizarDireccion = (id: string, campo: string, valor: any) => {
+    console.log("Buscando direcciones, campo: ", campo, "valor_length: ", valor.length)
     setDirecciones(direcciones.map(dir => {
       if (dir.id === id) {
         const actualizado = { ...dir, [campo]: valor };
         
         if (campo === 'codigo_postal' && valor.length === 5) {
-          buscarCodigoPostal(valor, id);
+          const result = valor.replace(/^0+/, '');
+          buscarCodigoPostal(result, id);
+          console.log("Buscando codigo postal")
         }
         
         if (campo === 'es_predeterminada' && valor === true) {
@@ -274,51 +269,97 @@ const RegistroPropietario = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const validarFormulario = (): string | null => {
+    if (!formData.correo_electronico || !formData.password || !formData.nombre || !formData.primer_apellido) {
+      return 'Por favor completa todos los campos obligatorios';
+    }
+
     if (formData.password !== formData.confirmar_password) {
-      alert('Las contraseñas no coinciden');
-      return;
+      return 'Las contraseñas no coinciden';
+    }
+
+    if (formData.password.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres';
     }
 
     if (telefonos.length === 0) {
-      alert('Debe agregar al menos un teléfono');
+      return 'Debe agregar al menos un teléfono';
+    }
+
+    for (const tel of telefonos) {
+      if (!tel.numero || !tel.tipo_telefono_id) {
+        return 'Todos los teléfonos deben tener número y tipo';
+      }
+      if (!tel.es_mismo_propietario && (!tel.nombre_contacto || !tel.relacion_contacto)) {
+        return 'Los teléfonos de terceros deben tener nombre y relación';
+      }
+    }
+
+    for (const dir of direcciones) {
+      if (!dir.tipo_domicilio_id || !dir.calle || !dir.num_exterior || !dir.codigo_postal || 
+          !dir.colonia_id || !dir.estado_id || !dir.municipio_id || !dir.fecha_inicio) {
+            console.log(dir)
+        return 'Todas las direcciones deben completar los campos obligatorios';
+      }
+    }
+
+    return null;
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+    
+    const errorValidacion = validarFormulario();
+    if (errorValidacion) {
+      setError(errorValidacion);
       return;
     }
 
-    const datosRegistro = {
-      propietario: {
-        correo_electronico: formData.correo_electronico,
-        password: formData.password,
-        nombre: formData.nombre,
-        primer_apellido: formData.primer_apellido,
-        segundo_apellido: formData.segundo_apellido,
-      },
-      telefonos: telefonos.map(tel => ({
-        numero: tel.numero,
-        tipo_telefono_id: parseInt(tel.tipo_telefono_id),
-        nombre_contacto: tel.nombre_contacto,
-        relacion_contacto: tel.relacion_contacto,
-        es_principal: tel.es_principal,
-        notas: tel.notas,
-      })),
-      direcciones: direcciones.map(dir => ({
-        tipo_domicilio_id: parseInt(dir.tipo_domicilio_id),
-        calle: dir.calle,
-        num_exterior: dir.num_exterior,
-        num_interior: dir.num_interior,
-        codigo_postal: dir.codigo_postal,
-        colonia_id: parseInt(dir.colonia_id),
-        estado_id: parseInt(dir.estado_id),
-        municipio_id: parseInt(dir.municipio_id),
-        fecha_inicio: dir.fecha_inicio,
-        fecha_fin: dir.fecha_fin || null,
-        es_predeterminada: dir.es_predeterminada,
-        notas: dir.notas,
-      })),
-    };
+    setLoading(true);
 
-    console.log('Datos a enviar:', datosRegistro);
-    alert('Registro exitoso! Revisa la consola para ver los datos.');
+    try {
+      const datosRegistro: RegistroCompletoData = {
+        propietario: {
+          correo_electronico: formData.correo_electronico,
+          password: formData.password,
+          nombre: formData.nombre,
+          primer_apellido: formData.primer_apellido,
+          segundo_apellido: formData.segundo_apellido || undefined,
+        },
+        telefonos: telefonos.map(tel => ({
+          numero: tel.numero,
+          tipo_telefono_id: parseInt(tel.tipo_telefono_id),
+          nombre_contacto: tel.nombre_contacto,
+          relacion_contacto: tel.relacion_contacto,
+          es_principal: tel.es_principal,
+          notas: tel.notas || undefined,
+        })),
+        direcciones: direcciones.map(dir => ({
+          tipo_domicilio_id: parseInt(dir.tipo_domicilio_id),
+          calle: dir.calle,
+          num_exterior: dir.num_exterior,
+          num_interior: dir.num_interior || undefined,
+          codigo_postal: dir.codigo_postal,
+          colonia_id: parseInt(dir.colonia_id),
+          estado_id: parseInt(dir.estado_id),
+          municipio_id: parseInt(dir.municipio_id),
+          fecha_inicio: dir.fecha_inicio,
+          fecha_fin: dir.fecha_fin || null,
+          es_predeterminada: dir.es_predeterminada,
+          notas: dir.notas || undefined,
+        })),
+      };
+
+      await ownerService.registerComplete(datosRegistro);
+      
+      alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+      navigate('/login-page');
+    } catch (err: any) {
+      console.error('Error en registro:', err);
+      setError(err.response?.data?.error || 'Error al registrar. Por favor intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -330,6 +371,12 @@ const RegistroPropietario = () => {
           </h1>
           <p className="text-gray-600">Hotel de Mascotas</p>
         </div>
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
 
         <div className="space-y-6">
           {/* Información Personal */}
@@ -394,7 +441,8 @@ const RegistroPropietario = () => {
               </div>
               <button
                 onClick={agregarTelefono}
-                className="flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-black transition-colors"
+                className="flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                disabled={loading}
               >
                 <Plus className="w-4 h-4 mr-1" />
                 Agregar
@@ -411,7 +459,8 @@ const RegistroPropietario = () => {
                     {telefonos.length > 1 && (
                       <button
                         onClick={() => eliminarTelefono(tel.id)}
-                        className="text-gray-500 hover:text-black"
+                        className="text-gray-500 hover:text-red-600"
+                        disabled={loading}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -482,18 +531,24 @@ const RegistroPropietario = () => {
             </div>
           </div>
 
-          {/* Direcciones Temporales */}
+          {/* Direcciones */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <MapPin className="w-5 h-5 text-black mr-2" />
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Direcciones Durante el Hospedaje
-                </h2>
+              <div>
+                <div className='flex items-center'>
+                  <MapPin className="w-5 h-5 text-black mr-2" />
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Direcciones Durante el Hospedaje
+                  </h2>
+                </div>
+                <p className='text-gray-400 text-sm mt-1'>
+                  Direcciones donde te encontrarás mientras la mascota esté hospedada
+                </p>
               </div>
               <button
                 onClick={agregarDireccion}
-                className="flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-black transition-colors"
+                className="flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                disabled={loading}
               >
                 <Plus className="w-4 h-4 mr-1" />
                 Agregar
@@ -516,7 +571,8 @@ const RegistroPropietario = () => {
                       </h3>
                       <button
                         onClick={() => eliminarDireccion(dir.id)}
-                        className="text-gray-500 hover:text-black"
+                        className="text-gray-500 hover:text-red-600"
+                        disabled={loading}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -629,16 +685,18 @@ const RegistroPropietario = () => {
           {/* Botones */}
           <div className="flex justify-end space-x-4 pb-8">
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => navigate('/login-page')}
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+              disabled={loading}
             >
               Cancelar
             </button>
             <button
               onClick={handleSubmit}
-              className="px-6 py-2 bg-black text-white rounded-md hover:bg-black transition-colors font-semibold"
+              className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={loading}
             >
-              Registrarse
+              {loading ? 'Registrando...' : 'Registrarse'}
             </button>
           </div>
         </div>

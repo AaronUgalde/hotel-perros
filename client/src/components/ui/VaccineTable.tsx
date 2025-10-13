@@ -4,7 +4,8 @@ import { Input } from './Input';
 
 export interface Vaccine {
   id: string;
-  name: string;
+  vaccineId: string; // ID de la vacuna del catálogo
+  name: string; // Nombre de la vacuna (para compatibilidad)
   inoculationDate: string;
   validityDate: string;
   vetId: string;
@@ -12,6 +13,7 @@ export interface Vaccine {
 
 interface VaccineTableProps {
   vaccines: Vaccine[];
+  vaccineOptions: { value: string; label: string }[];
   onAddVaccine: () => void;
   onUpdateVaccine: (id: string, field: keyof Vaccine, value: string) => void;
   onRemoveVaccine: (id: string) => void;
@@ -20,6 +22,7 @@ interface VaccineTableProps {
 
 export const VaccineTable: React.FC<VaccineTableProps> = ({
   vaccines,
+  vaccineOptions,
   onAddVaccine,
   onUpdateVaccine,
   onRemoveVaccine,
@@ -52,12 +55,18 @@ export const VaccineTable: React.FC<VaccineTableProps> = ({
         ) : (
           vaccines.map((vaccine) => (
             <div key={vaccine.id} className="px-4 py-3 grid grid-cols-5 gap-4 text-sm border-t">
-              <Input
-                value={vaccine.name}
-                onChange={(value) => onUpdateVaccine(vaccine.id, 'name', value)}
-                placeholder="Rabia"
-                className="min-w-0"
-              />
+              <select
+                value={vaccine.vaccineId || vaccine.name}
+                onChange={(e) => onUpdateVaccine(vaccine.id, 'vaccineId', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                <option value="">Seleccionar vacuna...</option>
+                {vaccineOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
               <Input
                 type="date"
                 value={vaccine.inoculationDate}
@@ -73,7 +82,7 @@ export const VaccineTable: React.FC<VaccineTableProps> = ({
               <Input
                 value={vaccine.vetId}
                 onChange={(value) => onUpdateVaccine(vaccine.id, 'vetId', value)}
-                placeholder="848542190512364"
+                placeholder="Cédula del veterinario"
                 className="min-w-0"
               />
               <div className="flex items-center">

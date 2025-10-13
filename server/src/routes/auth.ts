@@ -54,7 +54,7 @@ router.post(
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
 
-    const { email, password, nombre, apellido_paterno, apellido_materno, remember } = req.body;
+    const { email, password, nombre, primer_apellido, segundo_apellido, remember } = req.body;
 
     const correo = email.trim().toLowerCase();
 
@@ -65,7 +65,7 @@ router.post(
       // Insertar propietario
       const insertPropietarioQ = `
         INSERT INTO public.propietarios
-          (correo_electronico, hash_password, nombre, apellido_paterno, apellido_materno)
+          (correo_electronico, hash_password, nombre, primer_apellido, segundo_apellido)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING propietario_id, correo_electronico, nombre, primer_apellido, segundo_apellido, rol_id;
       `;
@@ -73,8 +73,8 @@ router.post(
         correo,
         pwHash,
         nombre || null,
-        apellido_paterno || null,
-        apellido_materno || null,
+        primer_apellido || null,
+        segundo_apellido || null,
       ]);
 
       const propietario = propietarioRes.rows[0];
@@ -96,8 +96,8 @@ router.post(
           propietario_id: propietario.propietario_id,
           correo_electronico: propietario.correo_electronico,
           nombre: propietario.nombre,
-          apellido_paterno: propietario.apellido_paterno,
-          apellido_materno: propietario.apellido_materno,
+          primer_apellido: propietario.primer_apellido,
+          segundo_apellido: propietario.segundo_apellido,
           rol_id: propietario.rol_id,
         },
       });
@@ -128,7 +128,7 @@ router.post(
       if (!correo || !password) return res.status(400).json({ error: 'Credenciales inválidas' });
 
       const q = `
-        SELECT propietario_id, correo_electronico, hash_password, nombre, apellido_paterno, apellido_materno, rol_id
+        SELECT propietario_id, correo_electronico, hash_password, nombre, primer_apellido, segundo_apellido, rol_id
         FROM public.propietarios
         WHERE correo_electronico = $1
       `;
@@ -155,8 +155,8 @@ router.post(
           propietario_id: user.propietario_id,
           correo_electronico: user.correo_electronico,
           nombre: user.nombre,
-          apellido_paterno: user.apellido_paterno,
-          apellido_materno: user.apellido_materno,
+          primer_apellido: user.primer_apellido,
+          segundo_apellido: user.segundo_apellido,
           rol_id: user.rol_id,
         },
       });
@@ -184,11 +184,11 @@ router.post('/logout', (req: Request, res: Response) => {
  */
 router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const propietarioId = req.user?.id_propietario;
+    const propietarioId = req.user?.propietario_id;
     if (!propietarioId) return res.status(401).json({ error: 'No autenticado' });
 
     const q = `
-      SELECT propietario_id, correo_electronico, nombre, apellido_paterno, apellido_materno, rol_id
+      SELECT propietario_id, correo_electronico, nombre, primer_apellido, segundo_apellido, rol_id
       FROM public.propietarios
       WHERE propietario_id = $1
     `;

@@ -1,199 +1,406 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { TextArea } from '../../../components/ui/TextArea';
 import { FileUpload } from '../../../components/ui/FileUpload';
 import { FormSection } from '../../../components/ui/FormSection';
 import { VaccineTable, type Vaccine } from '../../../components/ui/VaccineTable';
-import { ChipSection } from '../../../components/ui/ChipSection';
-import Select  from '../../../components/ui/Select';
-import { Header } from '../../../components/layout/Header';
-import gatoRegistrar from '../../../assets/gato_registrar.png'
-import api from '../../../lib/api';
+import { DiseaseTable, type Disease } from '../../../components/ui/DiseaseTable';
+import Select from '../../../components/ui/Select';
+import gatoRegistrar from '../../../assets/gato_registrar.png';
+import {
+  petService,
+  documentService,
+  vaccinationService,
+  diseaseService,
+} from '../../../services';
 
-// Interfaces para tipos de datos
 interface PetFormData {
-  petName: string;
-  species: string;
-  breed: string;
-  size: string;
-  weight: string;
-  sex: string;
-  coatType: string;
-  birthDate: string;
-  lastDewormingDate: string;
-  additionalNotes: string;
+  nombre: string;
+  especie_id: string;
+  raza_id: string;
+  sexo_id: string;
+  fecha_nacimiento: string;
+  peso_kg: string;
+  altura_cm: string;
+  largo_cm: string;
+  patron_pelo_id: string;
+  color_principal_id: string;
+  color_ojos_id: string;
+  numero_chip: string;
+  ruac: string;
+  esterilizado: boolean;
+  senas_particulares: string;
+  origen_id: string;
+  funcion_id: string;
+  mestizo: boolean;
+  url_database_chip: string;
+  frecuency_chip: string;
 }
 
-interface ChipData {
-  hasChip: boolean;
-  chipType: string;
-  chipNumber: string;
+interface SelectOption {
+  value: string;
+  label: string;
 }
 
 interface FormFiles {
-  sterilizationCert: File | null;
-  vaccinationCert: File | null;
-  photosArchive: File | null;
+  documentos: { file: File; tipo_documento_id: number }[];
 }
 
-// Opciones para dropdowns
-const formOptions = {
-  species: [
-    { value: 'perro', label: 'Perro' },
-    { value: 'gato', label: 'Gato' }
-  ],
-  breeds: {
-    perro: [
-      { value: 'poodle', label: 'Poodle' },
-      { value: 'labrador', label: 'Labrador' },
-      { value: 'golden', label: 'Golden Retriever' }
-    ],
-    gato: [
-      { value: 'siames', label: 'Siames' },
-      { value: 'persa', label: 'Persa' },
-      { value: 'bengala', label: 'Bengala' }
-    ]
-  },
-  sizes: [
-    { value: 'chico', label: 'Chico' },
-    { value: 'mediano', label: 'Mediano' },
-    { value: 'grande', label: 'Grande' }
-  ],
-  weights: [
-    { value: '5kg', label: '5 kg' },
-    { value: '10kg', label: '10 kg' },
-    { value: '15kg', label: '15 kg' }
-  ],
-  sexes: [
-    { value: 'macho', label: 'Macho' },
-    { value: 'hembra', label: 'Hembra' }
-  ],
-  coatTypes: [
-    { value: 'ondulado', label: 'Ondulado' },
-    { value: 'liso', label: 'Liso' },
-    { value: 'rizado', label: 'Rizado' }
-  ]
-};
-
 export const PetRegistrationForm: React.FC = () => {
-  // Estados del formulario
-  const [petData, setPetData] = useState<PetFormData>({
-    petName: '',
-    species: '',
-    breed: '',
-    size: '',
-    weight: '',
-    sex: '',
-    coatType: '',
-    birthDate: '',
-    lastDewormingDate: '',
-    additionalNotes: '',
-  });
+  const { user, loading: authLoading } = useAuth();
 
-  const [chipData, setChipData] = useState<ChipData>({
-    hasChip: false,
-    chipType: '',
-    chipNumber: '',
+  // Estados para opciones de los selects
+  const [especies, setEspecies] = useState<SelectOption[]>([]);
+  const [razas, setRazas] = useState<SelectOption[]>([]);
+  const [sexos, setSexos] = useState<SelectOption[]>([]);
+  const [patronesPelo, setPatronesPelo] = useState<SelectOption[]>([]);
+  const [colores, setColores] = useState<SelectOption[]>([]);
+  const [origenes, setOrigenes] = useState<SelectOption[]>([]);
+  const [funciones, setFunciones] = useState<SelectOption[]>([]);
+  const [tiposDocumentos, setTiposDocumentos] = useState<SelectOption[]>([]);
+  const [vacunasDisponibles, setVacunasDisponibles] = useState<SelectOption[]>([]);
+  const [enfermedadesDisponibles, setEnfermedadesDisponibles] = useState<SelectOption[]>([]);
+
+  // Estado del formulario
+  const [petData, setPetData] = useState<PetFormData>({
+    nombre: '',
+    especie_id: '',
+    raza_id: '',
+    sexo_id: '',
+    fecha_nacimiento: '',
+    peso_kg: '',
+    altura_cm: '',
+    largo_cm: '',
+    patron_pelo_id: '',
+    color_principal_id: '',
+    color_ojos_id: '',
+    numero_chip: '',
+    ruac: '',
+    esterilizado: false,
+    senas_particulares: '',
+    origen_id: '',
+    funcion_id: '',
+    mestizo: false,
+    url_database_chip: '',
+    frecuency_chip: '',
   });
 
   const [vaccines, setVaccines] = useState<Vaccine[]>([]);
-
+  const [diseases, setDiseases] = useState<Disease[]>([]);
   const [files, setFiles] = useState<FormFiles>({
-    sterilizationCert: null,
-    vaccinationCert: null,
-    photosArchive: null,
+    documentos: [],
   });
 
-  // Handlers para actualizar datos
-  const handlePetDataChange = (field: keyof PetFormData, value: string) => {
-    setPetData(prev => ({ ...prev, [field]: value }));
+  // Cargar catálogos al montar el componente
+  useEffect(() => {
+    loadCatalogs();
+  }, []);
+
+  // Cargar razas, vacunas y enfermedades cuando cambia la especie
+  useEffect(() => {
+    if (petData.especie_id) {
+      loadRazas(parseInt(petData.especie_id));
+      loadVacunas(parseInt(petData.especie_id));
+      loadEnfermedades(parseInt(petData.especie_id));
+    }
+  }, [petData.especie_id]);
+
+  const loadCatalogs = async () => {
+    try {
+      const [
+        especiesData,
+        sexosData,
+        patronesPeloData,
+        coloresData,
+        origenesData,
+        funcionesData,
+        tiposDocData,
+      ] = await Promise.all([
+        petService.getEspecies(),
+        petService.getSexos(),
+        petService.getPatronesPelo(),
+        petService.getColores(),
+        petService.getOrigenMascota(),
+        petService.getFuncionMascota(),
+        documentService.getTiposDocumentos(),
+      ]);
+
+      console.log(patronesPelo)
+
+      setEspecies(
+        especiesData.map((e: any) => ({
+          value: String(e.especie_id),
+          label: e.nombre || e.nombre_especie,
+        }))
+      );
+      setSexos(
+        sexosData.map((s: any) => ({
+          value: String(s.sexo_id),
+          label: s.nombre || s.descripcion || s.nombre_sexo,
+        }))
+      );
+      setPatronesPelo(
+        patronesPeloData.map((p: any) => ({
+          value: String(p.patron_id),
+          label: p.nombre || p.descripcion,
+        }))
+      );
+      setColores(
+        coloresData.map((c: any) => ({
+          value: String(c.color_id),
+          label: c.nombre || c.nombre_color,
+        }))
+      );
+      setOrigenes(
+        origenesData.map((o: any) => ({
+          value: String(o.origen_id),
+          label: o.nombre || o.descripcion,
+        }))
+      );
+      setFunciones(
+        funcionesData.map((f: any) => ({
+          value: String(f.funcion_id),
+          label: f.nombre || f.descripcion,
+        }))
+      );
+      setTiposDocumentos(
+        tiposDocData.map((t: any) => ({
+          value: String(t.tipo_documento_id),
+          label: t.nombre || t.nombre_tipo,
+        }))
+      );
+    } catch (error) {
+      console.error('Error cargando catálogos:', error);
+      alert('Error al cargar los catálogos. Por favor recargue la página.');
+    }
   };
 
-  const handleChipDataChange = (data: Partial<ChipData>) => {
-    setChipData(prev => ({ ...prev, ...data }));
+  const loadRazas = async (especieId: number) => {
+    try {
+      const razasData = await petService.getRazas(especieId);
+      setRazas(
+        razasData.map((r: any) => ({
+          value: String(r.raza_id),
+          label: r.nombre || r.nombre_raza,
+        }))
+      );
+    } catch (error) {
+      console.error('Error cargando razas:', error);
+    }
   };
 
-  const handleFileChange = (field: keyof FormFiles, file: File | null) => {
-    setFiles(prev => ({ ...prev, [field]: file }));
+  const loadVacunas = async (especieId: number) => {
+    try {
+      const vacunasData = await vaccinationService.getVacunasPorEspecie(especieId);
+      setVacunasDisponibles(
+        vacunasData.map((v: any) => ({
+          value: String(v.vacuna_id),
+          label: v.nombre || v.nombre_vacuna,
+        }))
+      );
+    } catch (error) {
+      console.error('Error cargando vacunas:', error);
+    }
   };
 
-  // Handlers para vacunas
+  const loadEnfermedades = async (especieId: number) => {
+    try {
+      const enfermedadesData = await diseaseService.getEnfermedadesPorEspecie(especieId);
+      setEnfermedadesDisponibles(
+        enfermedadesData.map((e: any) => ({
+          value: String(e.enfermedad_id),
+          label: e.nombre,
+        }))
+      );
+    } catch (error) {
+      console.error('Error cargando enfermedades:', error);
+    }
+  };
+
+  const handlePetDataChange = (field: keyof PetFormData, value: string | boolean) => {
+    console.log(patronesPelo)
+    setPetData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleAddVaccine = () => {
     const newVaccine: Vaccine = {
       id: Date.now().toString(),
+      vaccineId: '',
       name: '',
       inoculationDate: '',
       validityDate: '',
       vetId: '',
     };
-    setVaccines(prev => [...prev, newVaccine]);
+    setVaccines((prev) => [...prev, newVaccine]);
   };
 
   const handleUpdateVaccine = (id: string, field: keyof Vaccine, value: string) => {
-    setVaccines(prev =>
-      prev.map(vaccine =>
-        vaccine.id === id ? { ...vaccine, [field]: value } : vaccine
-      )
+    setVaccines((prev) =>
+      prev.map((vaccine) => (vaccine.id === id ? { ...vaccine, [field]: value } : vaccine))
     );
   };
 
   const handleRemoveVaccine = (id: string) => {
-    setVaccines(prev => prev.filter(vaccine => vaccine.id !== id));
+    setVaccines((prev) => prev.filter((vaccine) => vaccine.id !== id));
   };
 
-  // Handler para envío del formulario
-   const handleSubmit = async () => {
+  const handleAddDisease = () => {
+    const newDisease: Disease = {
+      id: Date.now().toString(),
+      diseaseId: '',
+      diseaseName: '',
+      diagnosisDate: '',
+      observations: '',
+      treatment: '',
+    };
+    setDiseases((prev) => [...prev, newDisease]);
+  };
+
+  const handleUpdateDisease = (id: string, field: keyof Disease, value: string) => {
+    setDiseases((prev) =>
+      prev.map((disease) => (disease.id === id ? { ...disease, [field]: value } : disease))
+    );
+  };
+
+  const handleRemoveDisease = (id: string) => {
+    setDiseases((prev) => prev.filter((disease) => disease.id !== id));
+  };
+
+  const handleFileAdd = (file: File, tipo_documento_id: string) => {
+    setFiles((prev) => ({
+      ...prev,
+      documentos: [...prev.documentos, { file, tipo_documento_id: parseInt(tipo_documento_id) }],
+    }));
+  };
+
+  const handleSubmit = async () => {
     try {
-      // Primero, registrar la mascota
-      const petPayload = {
-        nombre: petData.petName,
-        especie: petData.species,
-        raza: petData.breed,
-        tamano: petData.size,
-        peso_kg: petData.weight,
-        fecha_nacimiento: petData.birthDate,
-        sexo: petData.sex,
-        tipo_pelo: petData.coatType,
-        notas_adicionales: petData.additionalNotes,
+      // Verificar que el usuario esté autenticado
+      if (!user) {
+        alert('Debe iniciar sesión para registrar una mascota');
+        return;
+      }
+
+      // Validar campos obligatorios
+      if (!petData.nombre || !petData.especie_id) {
+        alert('Por favor complete los campos obligatorios (Nombre y Especie)');
+        return;
+      }
+
+      // 1. Registrar la mascota
+      const petPayload: any = {
+        nombre: petData.nombre,
+        especie_id: parseInt(petData.especie_id),
       };
 
-      const petResponse = await api.post('/pets', petPayload);
-      const pet = petResponse.data;
-      const petId = pet.pet_id;
+      // Solo agregar campos opcionales si tienen valor (excluir '', null, undefined)
+      if (petData.raza_id && petData.raza_id !== '') petPayload.raza_id = parseInt(petData.raza_id);
+      if (petData.sexo_id && petData.sexo_id !== '') petPayload.sexo_id = parseInt(petData.sexo_id);
+      if (petData.fecha_nacimiento && petData.fecha_nacimiento !== '') petPayload.fecha_nacimiento = petData.fecha_nacimiento;
+      if (petData.peso_kg && petData.peso_kg !== '') petPayload.peso_kg = parseFloat(petData.peso_kg);
+      if (petData.altura_cm && petData.altura_cm !== '') petPayload.altura_cm = parseFloat(petData.altura_cm);
+      if (petData.largo_cm && petData.largo_cm !== '') petPayload.largo_cm = parseFloat(petData.largo_cm);
+      if (petData.patron_pelo_id && petData.patron_pelo_id !== '') petPayload.patron_pelo_id = parseInt(petData.patron_pelo_id);
+      if (petData.color_principal_id && petData.color_principal_id !== '') petPayload.color_principal_id = parseInt(petData.color_principal_id);
+      if (petData.color_ojos_id && petData.color_ojos_id !== '') petPayload.color_ojos_id = parseInt(petData.color_ojos_id);
+      if (petData.numero_chip && petData.numero_chip !== '') petPayload.numero_chip = petData.numero_chip;
+      if (petData.ruac && petData.ruac !== '') petPayload.ruac = petData.ruac;
+      if (petData.esterilizado !== undefined && petData.esterilizado !== null) petPayload.esterilizado = petData.esterilizado;
+      if (petData.senas_particulares && petData.senas_particulares !== '') petPayload.senas_particulares = petData.senas_particulares;
+      if (petData.origen_id && petData.origen_id !== '') petPayload.origen_id = parseInt(petData.origen_id);
+      if (petData.funcion_id && petData.funcion_id !== '') petPayload.funcion_id = parseInt(petData.funcion_id);
+      if (petData.mestizo !== undefined && petData.mestizo !== null) petPayload.mestizo = petData.mestizo;
+      if (petData.url_database_chip && petData.url_database_chip !== '') petPayload.url_database_chip = petData.url_database_chip;
+      if (petData.frecuency_chip && petData.frecuency_chip !== '') petPayload.frecuency_chip = parseFloat(petData.frecuency_chip);
 
-      // Luego, chequear y subir cada documento si existe
-      const uploadDocument = async (file: File, tipo_doc: string) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('tipo_doc', tipo_doc);
-        await api.post(`/pet-docs/${petId}/upload`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      };
+      console.log('Usuario autenticado:', user);
+      console.log('Payload a enviar:', petPayload);
+      console.log('Payload JSON:', JSON.stringify(petPayload, null, 2));
+      console.log('NOTA: El propietario_id se obtiene automáticamente del token en el backend');
+      
+      const petResponse = await petService.registrarMascota(petPayload);
+      const mascotaId = petResponse.mascota_id;
 
-      if (files.sterilizationCert) {
-        await uploadDocument(files.sterilizationCert, 'esterilizacion');
-      }
-      if (files.vaccinationCert) {
-        await uploadDocument(files.vaccinationCert, 'vacunacion');
-      }
-      if (files.photosArchive) {
-        await uploadDocument(files.photosArchive, 'fotos');
+      // 2. Subir documentos
+      for (const doc of files.documentos) {
+        await documentService.subirDocumento(mascotaId, doc.file, doc.tipo_documento_id);
       }
 
-      console.log('Datos del formulario:', { petData, chipData, vaccines, files });
-      alert('Mascota registrada con éxito!');
-    } catch (error) {
-      console.error(error);
-      alert('Error al registrar la mascota');
+      // 3. Registrar vacunas
+      for (const vaccine of vaccines) {
+        if (vaccine.vaccineId || vaccine.inoculationDate) {
+          await vaccinationService.agregarVacuna(mascotaId, {
+            vacuna_id: vaccine.vaccineId ? parseInt(vaccine.vaccineId) : undefined,
+            fecha_aplicacion: vaccine.inoculationDate || undefined,
+            vigencia_hasta: vaccine.validityDate || undefined,
+            veterinario: vaccine.vetId || undefined,
+          });
+        }
+      }
+
+      // 4. Registrar enfermedades
+      for (const disease of diseases) {
+        if (disease.diseaseId) {
+          await diseaseService.agregarEnfermedad(mascotaId, {
+            enfermedad_id: parseInt(disease.diseaseId),
+            fecha_diagnostico: disease.diagnosisDate || undefined,
+            observaciones: disease.observations || undefined,
+            tratamiento: disease.treatment || undefined,
+          });
+        }
+      }
+
+      alert('¡Mascota registrada con éxito!');
+      // Opcional: redireccionar o limpiar el formulario
+      window.location.href = '/pets'; // O la ruta que corresponda
+    } catch (error: any) {
+      console.error('Error completo:', error);
+      console.error('Response data:', error.response?.data);
+      console.error('Response status:', error.response?.status);
+      
+      const errorMsg = error.response?.data?.error || 
+                       error.response?.data?.errors?.[0]?.msg || 
+                       error.response?.data?.message ||
+                       error.message;
+      
+      alert(`Error al registrar la mascota: ${errorMsg}`);
     }
   };
 
+  // Mostrar loading mientras se verifica la autenticación
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Verificar autenticación
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Acceso restringido</h2>
+          <p className="text-gray-600 mb-4">Debe iniciar sesión para registrar una mascota</p>
+          <Button
+            variant="primary"
+            onClick={() => window.location.href = '/login'}
+          >
+            Ir a iniciar sesión
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Título principal */}
         <div className="text-center mb-8">
@@ -207,26 +414,23 @@ export const PetRegistrationForm: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Sección izquierda - Datos básicos */}
-          <FormSection 
-            title="Datos indispensables de su mascota"
-            className="h-fit"
-          >
+          <FormSection title="Datos indispensables de su mascota" className="h-fit">
             <Input
-              label="Nombre del animal"
-              value={petData.petName}
-              onChange={(value) => handlePetDataChange('petName', value)}
+              label="Nombre del animal *"
+              value={petData.nombre}
+              onChange={(value) => handlePetDataChange('nombre', value)}
               placeholder="Ingrese el nombre del animal"
               required
             />
 
             <label className="block mt-4">
-              <span className="text-sm font-medium">Especie</span>
+              <span className="text-sm font-medium">Especie *</span>
               <Select
-                options={formOptions.species}
-                value={petData.species}
+                options={especies}
+                value={petData.especie_id}
                 onChange={(value) => {
-                  handlePetDataChange('species', value as string);
-                  handlePetDataChange('breed', ''); // Resetear raza al cambiar especie
+                  handlePetDataChange('especie_id', value as string);
+                  handlePetDataChange('raza_id', '');
                 }}
                 placeholder="Seleccionar especie"
                 variant="outline"
@@ -238,64 +442,36 @@ export const PetRegistrationForm: React.FC = () => {
             <label className="block mt-4">
               <span className="text-sm font-medium">Raza del animal</span>
               <Select
-                options={
-                  petData.species
-                    ? formOptions.breeds[petData.species as keyof typeof formOptions.breeds]
-                    : []
-                }
-                value={petData.breed}
-                onChange={(value) => handlePetDataChange('breed', value as string)}
+                options={razas}
+                value={petData.raza_id}
+                onChange={(value) => handlePetDataChange('raza_id', value as string)}
                 placeholder="Seleccionar raza"
                 variant="outline"
                 size="md"
                 className="mt-1"
+                disabled={!petData.especie_id}
               />
             </label>
 
             <label className="block mt-4">
-              <span className="text-sm font-medium">Tamaño del animal</span>
-              <Select
-                options={formOptions.sizes}
-                value={petData.size}
-                onChange={(value) => handlePetDataChange('size', value as string)}
-                placeholder="Seleccionar tamaño"
-                variant="outline"
-                size="md"
-                className="mt-1"
-              />
-            </label>
-
-            <label className="block mt-4">
-              <span className="text-sm font-medium">Peso (kg)</span>
-              <Input
-                type="number"
-                value={petData.weight}
-                onChange={(value) => handlePetDataChange('weight', value)}
-                placeholder="Ingrese el peso en kg"
-                className="mt-1"
-              />
+              <span className="text-sm font-medium flex items-center gap-2">
+                ¿Es mestizo?
+                <input
+                  type="checkbox"
+                  checked={petData.mestizo}
+                  onChange={(e) => handlePetDataChange('mestizo', e.target.checked)}
+                  className="rounded"
+                />
+              </span>
             </label>
 
             <label className="block mt-4">
               <span className="text-sm font-medium">Sexo</span>
               <Select
-                options={formOptions.sexes}
-                value={petData.sex}
-                onChange={(value) => handlePetDataChange('sex', value as string)}
+                options={sexos}
+                value={petData.sexo_id}
+                onChange={(value) => handlePetDataChange('sexo_id', value as string)}
                 placeholder="Seleccionar sexo"
-                variant="outline"
-                size="md"
-                className="mt-1"
-              />
-            </label>
-
-            <label className="block mt-4">
-              <span className="text-sm font-medium">Tipo de pelo</span>
-              <Select
-                options={formOptions.coatTypes}
-                value={petData.coatType}
-                onChange={(value) => handlePetDataChange('coatType', value as string)}
-                placeholder="Seleccionar tipo de pelo"
                 variant="outline"
                 size="md"
                 className="mt-1"
@@ -305,72 +481,211 @@ export const PetRegistrationForm: React.FC = () => {
             <Input
               label="Fecha de nacimiento"
               type="date"
-              value={petData.birthDate}
-              onChange={(value) => handlePetDataChange('birthDate', value)}
+              value={petData.fecha_nacimiento}
+              onChange={(value) => handlePetDataChange('fecha_nacimiento', value)}
             />
 
-            <Input
-              label="Fecha última desparasitación"
-              type="date"
-              value={petData.lastDewormingDate}
-              onChange={(value) => handlePetDataChange('lastDewormingDate', value)}
-            />
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Peso (kg)</span>
+              <Input
+                type="number"
+                value={petData.peso_kg}
+                onChange={(value) => handlePetDataChange('peso_kg', value)}
+                placeholder="Peso en kilogramos"
+                className="mt-1"
+              />
+            </label>
 
-            <FileUpload
-              label="Fotos de su mascota en un archivo PDF"
-              description="Agregar un archivo PDF con 3 fotos de su mascota (lateral y de frente)"
-              accept=".pdf"
-              maxSize={10}
-              onChange={(file) => handleFileChange('photosArchive', file)}
-            />
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Altura (cm)</span>
+              <Input
+                type="number"
+                value={petData.altura_cm}
+                onChange={(value) => handlePetDataChange('altura_cm', value)}
+                placeholder="Altura en centímetros"
+                className="mt-1"
+              />
+            </label>
+
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Largo (cm)</span>
+              <Input
+                type="number"
+                value={petData.largo_cm}
+                onChange={(value) => handlePetDataChange('largo_cm', value)}
+                placeholder="Largo en centímetros"
+                className="mt-1"
+              />
+            </label>
+
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Patrón de pelo</span>
+              <Select
+                options={patronesPelo}
+                value={petData.patron_pelo_id}
+                onChange={(value) => handlePetDataChange('patron_pelo_id', value as string)}
+                placeholder="Seleccionar patrón de pelo"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
+
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Color principal</span>
+              <Select
+                options={colores}
+                value={petData.color_principal_id}
+                onChange={(value) =>
+                  handlePetDataChange('color_principal_id', value as string)
+                }
+                placeholder="Seleccionar color principal"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
+
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Color de ojos</span>
+              <Select
+                options={colores}
+                value={petData.color_ojos_id}
+                onChange={(value) => handlePetDataChange('color_ojos_id', value as string)}
+                placeholder="Seleccionar color de ojos"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
+
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Origen de la mascota</span>
+              <Select
+                options={origenes}
+                value={petData.origen_id}
+                onChange={(value) => handlePetDataChange('origen_id', value as string)}
+                placeholder="Seleccionar origen"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
+
+            <label className="block mt-4">
+              <span className="text-sm font-medium">Función de la mascota</span>
+              <Select
+                options={funciones}
+                value={petData.funcion_id}
+                onChange={(value) => handlePetDataChange('funcion_id', value as string)}
+                placeholder="Seleccionar función"
+                variant="outline"
+                size="md"
+                className="mt-1"
+              />
+            </label>
           </FormSection>
 
           {/* Sección derecha */}
           <div className="space-y-6">
-            {/* Certificado de esterilización */}
-            <FormSection
-              title="Certificado de esterilización de su mascota"
-              description="Si no tiene el certificado de esterilización puede descargar el certificado en nuestras instalaciones con un costo extra."
-            >
-              <FileUpload
-                label="Certificado de esterilización"
-                accept=".pdf"
-                maxSize={5}
-                onChange={(file) => handleFileChange('sterilizationCert', file)}
+            {/* Chip y esterilización */}
+            <FormSection title="Información de chip y esterilización">
+              <Input
+                label="Número de chip"
+                value={petData.numero_chip}
+                onChange={(value) => handlePetDataChange('numero_chip', value)}
+                placeholder="Número de identificación del chip"
               />
 
-              <ChipSection
-                chipData={chipData}
-                onChipDataChange={handleChipDataChange}
+              <Input
+                label="URL de base de datos del chip"
+                value={petData.url_database_chip}
+                onChange={(value) => handlePetDataChange('url_database_chip', value)}
+                placeholder="URL del registro del chip"
               />
 
+              <Input
+                label="Frecuencia del chip (kHz)"
+                type="number"
+                value={petData.frecuency_chip}
+                onChange={(value) => handlePetDataChange('frecuency_chip', value)}
+                placeholder="Frecuencia en kHz"
+              />
+
+              <Input
+                label="RUAC (Registro Único de Animales de Compañía)"
+                value={petData.ruac}
+                onChange={(value) => handlePetDataChange('ruac', value)}
+                placeholder="Número RUAC"
+              />
+
+              <label className="block mt-4">
+                <span className="text-sm font-medium flex items-center gap-2">
+                  ¿Está esterilizado?
+                  <input
+                    type="checkbox"
+                    checked={petData.esterilizado}
+                    onChange={(e) => handlePetDataChange('esterilizado', e.target.checked)}
+                    className="rounded"
+                  />
+                </span>
+              </label>
+            </FormSection>
+
+            {/* Señas particulares */}
+            <FormSection title="Señas particulares">
               <TextArea
-                label="Notas adicionales sobre su mascota"
-                value={petData.additionalNotes}
-                onChange={(value) => handlePetDataChange('additionalNotes', value)}
-                placeholder="Agregue información adicional sobre su mascota..."
-                rows={3}
+                label="Descripción de señas particulares"
+                value={petData.senas_particulares}
+                onChange={(value) => handlePetDataChange('senas_particulares', value)}
+                placeholder="Describa cualquier característica distintiva de su mascota..."
+                rows={4}
                 maxLength={500}
               />
             </FormSection>
 
-            {/* Certificado de vacunación */}
-            <FormSection
-              title="Certificado de vacunación escaneado en PDF"
-              description="Descargue aquí el certificado de vacunación"
-            >
-              <FileUpload
-                label="Certificado de vacunación"
-                accept=".pdf"
-                maxSize={5}
-                onChange={(file) => handleFileChange('vaccinationCert', file)}
-              />
+            {/* Documentos */}
+            <FormSection title="Documentos de la mascota">
+              <div className="space-y-4">
+                {tiposDocumentos.map((tipo) => (
+                  <FileUpload
+                    key={tipo.value}
+                    label={tipo.label}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    maxSize={10}
+                    onChange={(file) => {
+                      if (file) handleFileAdd(file, tipo.value);
+                    }}
+                  />
+                ))}
+              </div>
+            </FormSection>
 
+            {/* Vacunas */}
+            <FormSection
+              title="Registro de vacunación"
+              description="Registre las vacunas de su mascota"
+            >
               <VaccineTable
                 vaccines={vaccines}
+                vaccineOptions={vacunasDisponibles}
                 onAddVaccine={handleAddVaccine}
                 onUpdateVaccine={handleUpdateVaccine}
                 onRemoveVaccine={handleRemoveVaccine}
+              />
+            </FormSection>
+
+            {/* Enfermedades */}
+            <FormSection
+              title="Historial de enfermedades"
+              description="Registre las enfermedades que ha padecido su mascota"
+            >
+              <DiseaseTable
+                diseases={diseases}
+                diseaseOptions={enfermedadesDisponibles}
+                onAddDisease={handleAddDisease}
+                onUpdateDisease={handleUpdateDisease}
+                onRemoveDisease={handleRemoveDisease}
               />
             </FormSection>
           </div>
