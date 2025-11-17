@@ -1,12 +1,38 @@
 {
-  "name": "hotel-perros",
+  "name": "hotel-perros-monorepo",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
+  "description": "Monorepo para el sistema de gestión de hotel de perros",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"npm:dev:client\" \"npm:dev:server\"",
+    "dev:client": "npm run dev --workspace=@hotel-perros/client",
+    "dev:server": "npm run dev --workspace=@hotel-perros/server",
+
+    "build": "npm run build --workspaces --if-present",
+    "build:client": "npm run build --workspace=@hotel-perros/client",
+    "build:server": "npm run build --workspace=@hotel-perros/server",
+
+    "start:server": "npm run start --workspace=@hotel-perros/server",
+
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
+    "install:all": "npm install"
   },
-  "keywords": [],
+  "keywords": [
+    "monorepo",
+    "hotel",
+    "perros",
+    "typescript",
+    "react",
+    "express"
+  ],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }
