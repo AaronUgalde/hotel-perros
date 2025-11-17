@@ -39,13 +39,13 @@ export interface RegistroCompletoData {
   direcciones?: DireccionRegistro[];
 }
 
-export interface Catalogo {
+export interface CatalogoOwner {
   id: number;
   nombre: string;
 }
 
 export interface CodigoPostalInfo {
-  colonias: Catalogo[];
+  colonias: CatalogoOwner[];
   municipio: string;
   municipio_id: number;
   estado: string;
@@ -64,7 +64,7 @@ const ownerService = {
   /**
    * Obtener tipos de teléfono
    */
-  async getTiposTelefono(): Promise<Catalogo[]> {
+  async getTiposTelefono(): Promise<CatalogoOwner[]> {
     const response = await api.get('/phones/tipos');
     return response.data.tipos || response.data;
   },
@@ -72,7 +72,7 @@ const ownerService = {
   /**
    * Obtener tipos de domicilio
    */
-  async getTiposDomicilio(): Promise<Catalogo[]> {
+  async getTiposDomicilio(): Promise<CatalogoOwner[]> {
     const response = await api.get('/directions/tipos');
     return response.data.tipos || response.data;
   },
@@ -88,7 +88,7 @@ const ownerService = {
   /**
    * Obtener estados
    */
-  async getEstados(): Promise<Catalogo[]> {
+  async getEstados(): Promise<CatalogoOwner[]> {
     const response = await api.get('/directions/estados');
     return response.data.estados || response.data;
   },
@@ -96,7 +96,7 @@ const ownerService = {
   /**
    * Obtener municipios por estado
    */
-  async getMunicipios(estadoId: number): Promise<Catalogo[]> {
+  async getMunicipios(estadoId: number): Promise<CatalogoOwner[]> {
     const response = await api.get(`/directions/municipios/${estadoId}`);
     return response.data.municipios || response.data;
   },
@@ -104,7 +104,7 @@ const ownerService = {
   /**
    * Obtener colonias por municipio y código postal
    */
-  async getColonias(municipioId: number, codigoPostal: string): Promise<Catalogo[]> {
+  async getColonias(municipioId: number, codigoPostal: string): Promise<CatalogoOwner[]> {
     const response = await api.get(`/directions/colonias/${municipioId}/${codigoPostal}`);
     return response.data.colonias || response.data;
   },

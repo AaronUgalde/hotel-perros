@@ -1,16 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, User, MapPin, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ownerService, { 
-  type TelefonoRegistro, 
-  type DireccionRegistro, 
-  type RegistroCompletoData 
+  type RegistroCompletoData,
+  type CatalogoOwner 
 } from '../../../services/owner.service';
-
-interface Catalogo {
-  id: number;
-  nombre: string;
-}
 
 interface TelefonoForm {
   id: string;
@@ -69,7 +63,7 @@ const Select = ({ label, value, onChange, options, required, disabled, placehold
       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:bg-gray-100 disabled:cursor-not-allowed"
     >
       <option value="">{placeholder || 'Seleccione una opción'}</option>
-      {options.map((opt: Catalogo) => (
+      {options.map((opt: CatalogoOwner) => (
         <option key={opt.id} value={opt.id}>
           {opt.nombre}
         </option>
@@ -104,11 +98,11 @@ const RegistroPropietario = () => {
     segundo_apellido: '',
   });
 
-  const [tiposTelefono, setTiposTelefono] = useState<Catalogo[]>([]);
-  const [tiposDomicilio, setTiposDomicilio] = useState<Catalogo[]>([]);
-  const [estados, setEstados] = useState<Catalogo[]>([]);
-  const [municipios, setMunicipios] = useState<Catalogo[]>([]);
-  const [colonias, setColonias] = useState<Catalogo[]>([]);
+  const [tiposTelefono, setTiposTelefono] = useState<CatalogoOwner[]>([]);
+  const [tiposDomicilio, setTiposDomicilio] = useState<CatalogoOwner[]>([]);
+  const [estados, setEstados] = useState<CatalogoOwner[]>([]);
+  const [municipios, setMunicipios] = useState<CatalogoOwner[]>([]);
+  const [colonias, setColonias] = useState<CatalogoOwner[]>([]);
 
   const [telefonos, setTelefonos] = useState<TelefonoForm[]>([{
     id: '1',
