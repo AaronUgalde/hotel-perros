@@ -1,12 +1,16 @@
 // src/routes/auth.ts
-import express from 'express';
+import express, { Request, Response } from 'express';
 import db from '../db';
 import { hashPassword, comparePassword } from '../utils/hash';
-import { requireAuth, AuthRequest } from '../middleware/auth';
+import { requireAuth } from '../middlewares/auth.middleware';
 import * as jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { body, validationResult } from 'express-validator';
-import { Request, Response } from 'express';
+
+interface AuthRequest extends Request {
+  user?: { propietario_id: number; rol_id: number; rol_nombre?: string };
+}
+
 dotenv.config();
 
 const router = express.Router();
