@@ -13,6 +13,7 @@ import direccionRoutes from './routes/direccion.routes';
 import telefonoRoutes from './routes/telefono.routes';
 import documentoRoutes from './routes/documento.routes';
 import vaccinationRoutes from './routes/vaccination.routes';
+import diseaseRoutes from './routes/disease.routes';
 
 class App {
   public app: Application;
@@ -62,6 +63,7 @@ class App {
     this.app.use('/api/phones', telefonoRoutes);
     this.app.use('/api/documents', documentoRoutes);
     this.app.use('/api/pet-vaccinations', vaccinationRoutes);
+    this.app.use('/api/diseases', diseaseRoutes);
   }
 
   private errorHandlers(): void {
