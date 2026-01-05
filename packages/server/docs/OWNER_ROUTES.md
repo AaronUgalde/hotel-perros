@@ -27,7 +27,10 @@ Content-Type: application/json
 {
   "propietario": {
     "correo_electronico": "string (requerido, único)",
-    "password": "string (requerido, min 6 caracteres)"
+    "password": "string (requerido, min 6 caracteres)",
+    "nombre": "string (requerido, max 80 caracteres)",
+    "primer_apellido": "string (requerido, max 80 caracteres)",
+    "segundo_apellido": "string (opcional, max 80 caracteres)"
   },
   "telefonos": [
     {
@@ -63,6 +66,9 @@ Content-Type: application/json
 #### Validaciones
 - `propietario.correo_electronico`: Email válido y único
 - `propietario.password`: Mínimo 6 caracteres
+- `propietario.nombre`: Requerido, máximo 80 caracteres
+- `propietario.primer_apellido`: Requerido, máximo 80 caracteres
+- `propietario.segundo_apellido`: Opcional, máximo 80 caracteres
 - `telefonos`: Array con al menos 1 teléfono
 - `direcciones`: Array opcional (puede estar vacío o no enviarse)
 - Los IDs de catálogos (tipo_telefono_id, colonia_id, etc.) deben existir en la base de datos
@@ -119,8 +125,8 @@ Sin body
   "data": {
     "id": "number",
     "nombre": "string",
-    "apellido_paterno": "string",
-    "apellido_materno": "string",
+    "primer_apellido": "string",
+    "segundo_apellido": "string",
     "telefono": "string",
     "direccion": "string",
     "ciudad": "string",
@@ -171,9 +177,9 @@ Todos los campos son opcionales. Solo envía los campos que deseas actualizar:
 
 ```json
 {
-  "nombre": "string (opcional)",
-  "apellido_paterno": "string (opcional)",
-  "apellido_materno": "string (opcional)",
+  "nombre": "string (opcional, max 80 caracteres)",
+  "primer_apellido": "string (opcional, max 80 caracteres)",
+  "segundo_apellido": "string (opcional, max 80 caracteres)",
   "telefono": "string (opcional)",
   "direccion": "string (opcional)",
   "ciudad": "string (opcional)",
@@ -196,8 +202,8 @@ Todos los campos son opcionales. Solo envía los campos que deseas actualizar:
   "data": {
     "id": "number",
     "nombre": "string",
-    "apellido_paterno": "string",
-    "apellido_materno": "string",
+    "primer_apellido": "string",
+    "segundo_apellido": "string",
     "telefono": "string",
     "direccion": "string",
     "ciudad": "string",
@@ -237,7 +243,10 @@ curl -X POST http://localhost:3000/api/owners/register-complete \
   -d '{
     "propietario": {
       "correo_electronico": "maria.gonzalez@ejemplo.com",
-      "password": "MiPassword123!"
+      "password": "MiPassword123!",
+      "nombre": "María",
+      "primer_apellido": "González",
+      "segundo_apellido": "López"
     },
     "telefonos": [
       {
