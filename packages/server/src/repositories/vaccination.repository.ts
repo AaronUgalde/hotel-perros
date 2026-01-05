@@ -23,9 +23,7 @@ export interface CreateVaccinationDTO {
 }
 
 export class VaccinationRepository {
-  /**
-   * Obtener todas las vacunaciones de una mascota
-   */
+  // Obtener todas las vacunaciones de una mascota
   async findAllByPet(mascotaId: number): Promise<Vaccination[]> {
     const query = `
       SELECT 
@@ -37,19 +35,20 @@ export class VaccinationRepository {
         vigencia_hasta, 
         veterinario, 
         notas
-      FROM public.vacunas_mascotas
+      FROM vacunas_mascotas
       WHERE mascota_id = $1
       ORDER BY fecha_aplicacion DESC
     `;
-    
-    const result = await db.query<Vaccination>(query, [mascotaId]);
+
+    const result = await db.query(query, [mascotaId]);
     return result.rows;
   }
 
-  /**
-   * Obtener una vacunación específica
-   */
-  async findById(vacunaId: number, mascotaId: number): Promise<Vaccination | null> {
+  // Obtener una vacunación específica
+  async findById(
+    vacunaId: number,
+    mascotaId: number
+  ): Promise<Vaccination | null> {
     const query = `
       SELECT 
         vacuna_mascota_id, 
@@ -60,20 +59,18 @@ export class VaccinationRepository {
         vigencia_hasta, 
         veterinario, 
         notas
-      FROM public.vacunas_mascotas
+      FROM vacunas_mascotas
       WHERE vacuna_mascota_id = $1 AND mascota_id = $2
     `;
-    
-    const result = await db.query<Vaccination>(query, [vacunaId, mascotaId]);
+
+    const result = await db.query(query, [vacunaId, mascotaId]);
     return result.rows[0] || null;
   }
 
-  /**
-   * Crear nueva vacunación
-   */
+  // Crear vacunación
   async create(data: CreateVaccinationDTO): Promise<Vaccination> {
     const query = `
-      INSERT INTO public.vacunas_mascotas
+      INSERT INTO vacunas_mascotas
         (mascota_id, vacuna_id, nombre_vacuna, fecha_aplicacion, vigencia_hasta, veterinario, notas)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING 
@@ -86,8 +83,8 @@ export class VaccinationRepository {
         veterinario, 
         notas
     `;
-    
-    const result = await db.query<Vaccination>(query, [
+
+    const result = await db.query(query, [
       data.mascota_id,
       data.vacuna_id ?? null,
       data.nombre_vacuna ?? null,
@@ -96,27 +93,25 @@ export class VaccinationRepository {
       data.veterinario ?? null,
       data.notas ?? null,
     ]);
-    
+
     return result.rows[0];
   }
 
-  /**
-   * Actualizar vacunación
-   */
+  // Actualizar vacunación
   async update(
-    vacunaId: number, 
-    mascotaId: number, 
+    vacunaId: number,
+    mascotaId: number,
     data: Partial<CreateVaccinationDTO>
   ): Promise<Vaccination | null> {
     const allowedFields = [
-      'nombre_vacuna', 
-      'vacuna_id', 
-      'fecha_aplicacion', 
-      'vigencia_hasta', 
-      'veterinario', 
-      'notas'
+      'nombre_vacuna',
+      'vacuna_id',
+      'fecha_aplicacion',
+      'vigencia_hasta',
+      'veterinario',
+      'notas',
     ];
-    
+
     const sets: string[] = [];
     const values: any[] = [];
     let idx = 1;
@@ -128,66 +123,59 @@ export class VaccinationRepository {
       }
     }
 
-    if (sets.length === 0) {
-      return null;
-    }
+    if (sets.length === 0) return null;
 
     values.push(vacunaId, mascotaId);
-    
+
     const query = `
-      UPDATE public.vacunas_mascotas 
-      SET ${sets.join(', ')} 
+      UPDATE vacunas_mascotas
+      SET ${sets.join(', ')}
       WHERE vacuna_mascota_id = $${idx++} AND mascota_id = $${idx}
       RETURNING *
     `;
-    
-    const result = await db.query<Vaccination>(query, values);
+
+    const result = await db.query(query, values);
     return result.rows[0] || null;
   }
 
-  /**
-   * Eliminar vacunación
-   */
+  // Eliminar vacunación
   async delete(vacunaId: number, mascotaId: number): Promise<boolean> {
     const query = `
-      DELETE FROM public.vacunas_mascotas 
+      DELETE FROM vacunas_mascotas
       WHERE vacuna_mascota_id = $1 AND mascota_id = $2
       RETURNING vacuna_mascota_id
     `;
-    
+
     const result = await db.query(query, [vacunaId, mascotaId]);
-    return (result.rowCount || 0) > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
-  /**
-   * Obtener catálogo de vacunas por especie
-   */
+  // Catálogo de vacunas por especie
   async getVacunasByEspecie(especieId: string): Promise<any[]> {
     const query = `SELECT * FROM vacunas WHERE especie_id = $1`;
     const result = await db.query(query, [especieId]);
     return result.rows;
   }
 
-  /**
-   * Verificar si una mascota existe
-   */
+  // Verificar si existe mascota
   async petExists(mascotaId: number): Promise<boolean> {
-    const query = `SELECT 1 FROM public.mascotas WHERE mascota_id = $1`;
+    const query = `SELECT 1 FROM mascotas WHERE mascota_id = $1`;
     const result = await db.query(query, [mascotaId]);
-    return (result.rowCount || 0) > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
-  /**
-   * Verificar si una mascota pertenece a un propietario
-   */
-  async verifyPetOwnership(mascotaId: number, propietarioId: number): Promise<boolean> {
+  // Verificar ownership
+  async verifyPetOwnership(
+    mascotaId: number,
+    propietarioId: number
+  ): Promise<boolean> {
     const query = `
-      SELECT 1 
-      FROM public.mascotas 
+      SELECT 1
+      FROM mascotas
       WHERE mascota_id = $1 AND propietario_id = $2
     `;
     const result = await db.query(query, [mascotaId, propietarioId]);
-    return (result.rowCount || 0) > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 }
 
