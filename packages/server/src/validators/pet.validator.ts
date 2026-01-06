@@ -26,6 +26,37 @@ export const createPetValidator = [
   body('frecuency_chip').optional().isFloat().withMessage('Frecuency chip debe ser un número'),
 ];
 
+// Validador para crear mascota con información completa
+export const createPetWithDetailsValidator = [
+  // Validaciones de mascota
+  body('pet.nombre').notEmpty().trim().withMessage('Nombre de mascota es requerido'),
+  body('pet.especie_id').isInt().withMessage('Especie ID debe ser un número entero'),
+  body('pet.sexo_id').isInt().withMessage('Sexo ID debe ser un número entero'),
+  body('pet.fecha_nacimiento').isISO8601().withMessage('Fecha de nacimiento debe ser una fecha válida'),
+  
+  // Validaciones de vacunas (array opcional)
+  body('vacunas').optional().isArray().withMessage('Vacunas debe ser un array'),
+  body('vacunas.*.vacuna_id').optional().isInt().withMessage('Vacuna ID debe ser un número entero'),
+  body('vacunas.*.nombre_vacuna').optional().trim(),
+  body('vacunas.*.fecha_aplicacion').optional().isISO8601().withMessage('Fecha de aplicación debe ser válida'),
+  body('vacunas.*.vigencia_hasta').optional().isISO8601().withMessage('Vigencia hasta debe ser válida'),
+  body('vacunas.*.veterinario').optional().trim(),
+  body('vacunas.*.notas').optional().trim(),
+  
+  // Validaciones de enfermedades (array opcional)
+  body('enfermedades').optional().isArray().withMessage('Enfermedades debe ser un array'),
+  body('enfermedades.*.enfermedad_id').isInt().withMessage('Enfermedad ID debe ser un número entero'),
+  body('enfermedades.*.fecha_diagnostico').optional().isISO8601().withMessage('Fecha de diagnóstico debe ser válida'),
+  body('enfermedades.*.observaciones').optional().trim(),
+  body('enfermedades.*.tratamiento').optional().trim(),
+  
+  // Validaciones de documentos (array opcional)
+  body('documentos').optional().isArray().withMessage('Documentos debe ser un array'),
+  body('documentos.*.tipo_documento_id').optional().isInt().withMessage('Tipo de documento ID debe ser un número entero'),
+  body('documentos.*.nombre_archivo').notEmpty().trim().withMessage('Nombre de archivo es requerido'),
+  body('documentos.*.ruta_archivo').notEmpty().trim().withMessage('Ruta de archivo es requerida'),
+];
+
 export const updatePetValidator = [
   body('nombre').optional().trim(),
   body('especie_id').optional().isInt(),
