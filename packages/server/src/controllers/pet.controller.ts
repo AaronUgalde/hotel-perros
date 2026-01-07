@@ -40,6 +40,69 @@ export class PetController {
     }
   }
 
+  async createWithDetails(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      // Verificar que existe el campo data
+      if (!req.body.data) {
+        res.status(400).json({
+          success: false,
+          error: 'El campo "data" es requerido en el body (form-data)'
+        });
+        return;
+      }
+
+      // Parsear el JSON que viene en el campo 'data'
+      let data;
+      try {
+        data = typeof req.body.data === 'string' 
+          ? JSON.parse(req.body.data) 
+          : req.body.data;
+      } catch (parseError) {
+        res.status(400).json({
+          success: false,
+          error: 'El campo "data" debe contener un JSON válido'
+        });
+        return;
+      }
+
+      // Verificar que existe el objeto pet
+      if (!data.pet) {
+        res.status(400).json({
+          success: false,
+          error: 'El campo "pet" es requerido dentro de "data"'
+        });
+        return;
+      }
+
+      // Procesar archivos subidos
+      const files = req.files as Express.Multer.File[];
+      const documentos = files?.map((file, index) => ({
+        tipo_documento_id: data.documentos?.[index]?.tipo_documento_id || null,
+        nombre_archivo: file.originalname,
+        ruta_archivo: file.path
+      })) || [];
+
+      // Combinar datos con documentos procesados
+      const requestData = {
+        pet: data.pet,
+        vacunas: data.vacunas || [],
+        enfermedades: data.enfermedades || [],
+        alergias: data.alergias || [],
+        desparasitaciones: data.desparasitaciones || [],
+        documentos: documentos
+      };
+
+      const result = await petService.createWithDetails(requestData, req.user!.propietario_id);
+      res.status(201).json({ 
+        success: true, 
+        data: result,
+        message: 'Mascota creada exitosamente con todos sus detalles'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const pet = await petService.update(

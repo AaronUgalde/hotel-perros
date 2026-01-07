@@ -14,6 +14,10 @@ import telefonoRoutes from './routes/telefono.routes';
 import documentoRoutes from './routes/documento.routes';
 import vaccinationRoutes from './routes/vaccination.routes';
 import diseaseRoutes from './routes/disease.routes';
+import servicioRoutes from './routes/servicio.routes';
+import alergiaRoutes from './routes/alergia.routes';
+import desparasitacionRoutes from './routes/desparasitacion.routes';
+import habitacionRoutes from './routes/habitacion.routes';
 import reservacionRoutes from './routes/reservacion.routes';
 
 class App {
@@ -65,6 +69,10 @@ class App {
     this.app.use('/api/documents', documentoRoutes);
     this.app.use('/api/pet-vaccinations', vaccinationRoutes);
     this.app.use('/api/diseases', diseaseRoutes);
+    this.app.use('/api/servicios', servicioRoutes);
+    this.app.use('/api/alergias', alergiaRoutes);
+    this.app.use('/api/desparasitaciones', desparasitacionRoutes);
+    this.app.use('/api/habitaciones', habitacionRoutes);
     this.app.use('/api/reservaciones', reservacionRoutes);
   }
 
