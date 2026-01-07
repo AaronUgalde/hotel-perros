@@ -21,6 +21,7 @@ import habitacionRoutes from './routes/habitacion.routes';
 import reservacionRoutes from './routes/reservacion.routes';
 import empleadoRoutes from './routes/empleado.routes';
 import citaServicioRoutes from './routes/cita-servicio.routes';
+import pagoRoutes from './routes/pago.routes';
 
 class App {
   public app: Application;
@@ -78,6 +79,7 @@ class App {
     this.app.use('/api/reservaciones', reservacionRoutes);
     this.app.use('/api/empleados', empleadoRoutes);
     this.app.use('/api/citas-servicios', citaServicioRoutes);
+    this.app.use('/api/pagos', pagoRoutes);
   }
 
   private errorHandlers(): void {
