@@ -19,6 +19,8 @@ import alergiaRoutes from './routes/alergia.routes';
 import desparasitacionRoutes from './routes/desparasitacion.routes';
 import habitacionRoutes from './routes/habitacion.routes';
 import reservacionRoutes from './routes/reservacion.routes';
+import empleadoRoutes from './routes/empleado.routes';
+import citaServicioRoutes from './routes/cita-servicio.routes';
 
 class App {
   public app: Application;
@@ -74,6 +76,8 @@ class App {
     this.app.use('/api/desparasitaciones', desparasitacionRoutes);
     this.app.use('/api/habitaciones', habitacionRoutes);
     this.app.use('/api/reservaciones', reservacionRoutes);
+    this.app.use('/api/empleados', empleadoRoutes);
+    this.app.use('/api/citas-servicios', citaServicioRoutes);
   }
 
   private errorHandlers(): void {
