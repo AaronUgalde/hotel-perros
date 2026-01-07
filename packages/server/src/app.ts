@@ -14,6 +14,7 @@ import telefonoRoutes from './routes/telefono.routes';
 import documentoRoutes from './routes/documento.routes';
 import vaccinationRoutes from './routes/vaccination.routes';
 import diseaseRoutes from './routes/disease.routes';
+import reservacionRoutes from './routes/reservacion.routes';
 
 class App {
   public app: Application;
@@ -64,6 +65,7 @@ class App {
     this.app.use('/api/documents', documentoRoutes);
     this.app.use('/api/pet-vaccinations', vaccinationRoutes);
     this.app.use('/api/diseases', diseaseRoutes);
+    this.app.use('/api/reservaciones', reservacionRoutes);
   }
 
   private errorHandlers(): void {
