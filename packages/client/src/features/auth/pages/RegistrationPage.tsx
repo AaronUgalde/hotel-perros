@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, User, MapPin, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ownerService, { 
+import { 
+  ownerApi,
   type RegistroCompletoData,
   type CatalogoOwner 
-} from '../../../services/owner.service';
+} from '../api';
 
 interface TelefonoForm {
   id: string;
@@ -132,9 +133,9 @@ const RegistroPropietario = () => {
   const cargarCatalogos = async () => {
     try {
       const [tiposTel, tiposDom, est] = await Promise.all([
-        ownerService.getTiposTelefono(),
-        ownerService.getTiposDomicilio(),
-        ownerService.getEstados(),
+        ownerApi.getTiposTelefono(),
+        ownerApi.getTiposDomicilio(),
+        ownerApi.getEstados(),
       ]);
 
       console.log('tiposTel:', tiposTel);
@@ -157,7 +158,7 @@ const RegistroPropietario = () => {
 
     setBuscandoCP(true);
     try {
-      const data = await ownerService.buscarCodigoPostal(cp);
+      const data = await ownerApi.buscarCodigoPostal(cp);
 
       console.log("estos son los datos: ", data)
       console.log("estas son las colonias: ", data.colonias, 'Array?', Array.isArray(data.colonias))
@@ -357,7 +358,7 @@ const RegistroPropietario = () => {
         })),
       };
 
-      await ownerService.registerComplete(datosRegistro);
+      await ownerApi.registerComplete(datosRegistro);
       
       alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
       navigate('/login-page');

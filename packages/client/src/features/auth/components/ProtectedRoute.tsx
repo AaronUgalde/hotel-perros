@@ -5,10 +5,12 @@ import { useAuth } from '../hooks/useAuth';
 
 interface ProtectedRouteProps {
   redirectTo?: string;
+  requireAdmin?: boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  redirectTo = '/login' 
+  redirectTo = '/login',
+  requireAdmin = false
 }) => {
   const { user, isLoading } = useAuth();
 
@@ -44,6 +46,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (!user) {
     return <Navigate to={redirectTo} replace />;
+  }
+
+  // Verificar si se requiere admin y el usuario no es admin
+  if (requireAdmin && user.rol_id !== 1) {
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;

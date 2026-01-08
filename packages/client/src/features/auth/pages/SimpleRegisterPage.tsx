@@ -59,8 +59,8 @@ export const SimpleRegisterPage: React.FC = () => {
         apellido_materno: formData.apellido_materno || undefined,
       });
 
-      // Redirigir a login con mensaje de éxito
-      navigate('/login', { state: { message: '¡Registro exitoso! Ahora puedes iniciar sesión.' } });
+      // Redirigir al home después del registro exitoso
+      navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Error al registrar usuario');
     } finally {

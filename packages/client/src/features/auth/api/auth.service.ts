@@ -36,7 +36,7 @@ const authService = {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await api.post('/auth/login', credentials);
-    return response.data;
+    return response.data; // Ya devuelve { success, data: { propietario } }
   },
 
   /**
