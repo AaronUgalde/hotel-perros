@@ -171,6 +171,7 @@ export const AddAlergiaPage: React.FC = () => {
             Cancelar
           </Button>
           <Button
+            type='submit'
             variant="primary"
             disabled={loading || !formData.alergia_id}
           >

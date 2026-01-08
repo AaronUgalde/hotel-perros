@@ -215,6 +215,7 @@ export const AddVacunaPage: React.FC = () => {
             Cancelar
           </Button>
           <Button
+            type='submit'
             variant="primary"
             disabled={loading || (!formData.vacuna_id && !formData.nombre_vacuna)}
           >

@@ -174,7 +174,7 @@ export const AddDesparasitacionPage: React.FC = () => {
           >
             Cancelar
           </Button>
-          <Button
+          <Button type='submit'
             variant="primary"
             disabled={loading}
           >

@@ -177,6 +177,7 @@ export const AddEnfermedadPage: React.FC = () => {
             Cancelar
           </Button>
           <Button
+            type='submit'
             variant="primary"
             disabled={loading || !formData.enfermedad_id}
           >

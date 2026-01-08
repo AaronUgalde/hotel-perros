@@ -189,6 +189,7 @@ export const AddDocumentoPage: React.FC = () => {
             Cancelar
           </Button>
           <Button
+            type='submit'
             variant="primary"
             disabled={loading || !selectedFile}
           >

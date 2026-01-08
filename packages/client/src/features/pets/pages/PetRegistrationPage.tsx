@@ -694,6 +694,7 @@ export const PetRegistrationForm: React.FC = () => {
         {/* Botón de registro */}
         <div className="flex justify-center mt-8">
           <Button
+            type='submit'
             variant="primary"
             size="lg"
             onClick={handleSubmit}

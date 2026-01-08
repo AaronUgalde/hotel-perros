@@ -437,6 +437,7 @@ export const PetFormPage: React.FC = () => {
             Cancelar
           </Button>
           <Button
+            type='submit'
             variant="primary"
             disabled={loading}
           >
