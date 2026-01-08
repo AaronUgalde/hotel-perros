@@ -34,11 +34,29 @@ class App {
   }
 
   private config(): void {
-    // CORS
-    this.app.use(cors({
-      origin: env.FRONTEND_URL,
+    // CORS - Configuración mejorada para producción
+    const corsOptions = {
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        // Permitir requests sin origin (como apps móviles o curl)
+        if (!origin) return callback(null, true);
+        
+        // Lista de orígenes permitidos
+        const allowedOrigins = [env.FRONTEND_URL];
+        
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          console.warn(`CORS blocked origin: ${origin}`);
+          callback(new Error('No permitido por CORS'));
+        }
+      },
       credentials: true,
-    }));
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      exposedHeaders: ['Set-Cookie'],
+    };
+    
+    this.app.use(cors(corsOptions));
 
     // Body parser
     this.app.use(express.json());

@@ -10,7 +10,9 @@ export const jwtConfig = {
   cookieOptions: {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
+    sameSite: env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
+    // En producción con sameSite: 'none', secure DEBE ser true
+    domain: env.NODE_ENV === 'production' ? undefined : undefined,
   }
 };
 
