@@ -1,5 +1,7 @@
 # 🐕 Hotel Perros - Monorepo
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/AaronUgalde/hotel-perros)
+
 Sistema de gestión para hotel de perros construido como monorepo usando npm workspaces.
 
 ## 📁 Estructura del Proyecto
