@@ -50,27 +50,34 @@ const Input = ({ label, type = 'text', value, onChange, required, disabled, plac
   </div>
 );
 
-const Select = ({ label, value, onChange, options, required, disabled, placeholder }: any) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      {label}
-      {required && <span className="text-black ml-1">*</span>}
-    </label>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
-      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:bg-gray-100 disabled:cursor-not-allowed"
-    >
-      <option value="">{placeholder || 'Seleccione una opción'}</option>
-      {options.map((opt: CatalogoOwner) => (
-        <option key={opt.id} value={opt.id}>
-          {opt.nombre}
-        </option>
-      ))}
-    </select>
-  </div>
-);
+const Select = ({ label, value, onChange, options, required, disabled, placeholder }: any) => {
+  console.log('label ', label, ' Select options:', options, 'Array?', Array.isArray(options));
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+        {required && <span className="text-black ml-1">*</span>}
+      </label>
+
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:bg-gray-100 disabled:cursor-not-allowed"
+      >
+        <option value="">{placeholder || 'Seleccione una opción'}</option>
+
+        {options.map((opt: CatalogoOwner) => (
+          <option key={opt.id} value={opt.id}>
+            {opt.nombre}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
 
 const Checkbox = ({ label, checked, onChange }: any) => (
   <label className="flex items-center space-x-2 cursor-pointer">
@@ -130,6 +137,13 @@ const RegistroPropietario = () => {
         ownerService.getEstados(),
       ]);
 
+      console.log('tiposTel:', tiposTel);
+      console.log('Array?', Array.isArray(tiposTel));
+      console.log('tiposDom:', tiposDom);
+      console.log('Array?', Array.isArray(tiposDom));
+      console.log('est:', est);
+      console.log('Array?', Array.isArray(est));
+
       setTiposTelefono(tiposTel);
       setTiposDomicilio(tiposDom);
       setEstados(est);
@@ -145,9 +159,9 @@ const RegistroPropietario = () => {
     try {
       const data = await ownerService.buscarCodigoPostal(cp);
 
-      console.log(data)
-      
-      setColonias(data.colonias);
+      console.log("estos son los datos: ", data)
+      console.log("estas son las colonias: ", data.colonias, 'Array?', Array.isArray(data.colonias))
+      setColonias(data.colonias)
       
       if (direccionId) {
         setDirecciones(prev => prev.map(dir => 
@@ -245,8 +259,7 @@ const RegistroPropietario = () => {
         const actualizado = { ...dir, [campo]: valor };
         
         if (campo === 'codigo_postal' && valor.length === 5) {
-          const result = valor.replace(/^0+/, '');
-          buscarCodigoPostal(result, id);
+          buscarCodigoPostal(valor, id);
           console.log("Buscando codigo postal")
         }
         

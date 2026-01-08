@@ -1,45 +1,75 @@
 // src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import authService from '../services/auth.service';
-import type { Propietario } from '../services/auth.service';
+import React, { createContext, useEffect, useState } from 'react';
+import authService from '../features/auth/api/auth.service';
+import type {
+  AuthContextValue,
+  LoginCredentials,
+  RegisterData,
+  User,
+} from '../features/auth';
 
-type AuthContextType = {
-  user: Propietario | null;
-  loading: boolean;
-  login: (email: string, password: string, remember: boolean) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshMe: () => Promise<void>;
-};
+export const AuthContext = createContext<AuthContextValue | undefined>(
+  undefined
+);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<Propietario | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isAuthenticated = !!user;
 
-  const refreshMe = async () => {
+  // ========================
+  // Auth logic
+  // ========================
+
+  const checkAuth = async () => {
     try {
+      setIsLoading(true);
       const response = await authService.me();
       setUser(response.propietario);
-    } catch (err) {
+    } catch {
       setUser(null);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    refreshMe();
+    checkAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const login = async (email: string, password: string, remember: boolean) => {
-    const response = await authService.login({ 
-      correo_electronico: email,
-      password, 
-      remember 
-    });
-    setUser(response.propietario);
+  const login = async (credentials: LoginCredentials) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await authService.login(credentials);
+      setUser(response.propietario);
+    } catch (err: any) {
+      setError(err?.message ?? 'Error al iniciar sesión');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (data: RegisterData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await authService.register(data);
+      setUser(response.propietario);
+    } catch (err: any) {
+      setError(err?.message ?? 'Error al registrarse');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = async () => {
@@ -50,15 +80,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const clearError = () => setError(null);
+
+  // ========================
+  // Provider
+  // ========================
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshMe }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        error,
+        login,
+        register,
+        logout,
+        checkAuth,
+        clearError,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
-}

@@ -1,165 +1,105 @@
 import React, { useState } from 'react';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, LogIn, ArrowRight } from 'lucide-react';
 import PerroLogin from '../../../assets/perro_dueño_login.png';
+import type { LoginCredentials } from '../types';
 
-interface LoginPageProps {
-  onLogin?: (email: string, password: string, rememberMe: boolean) => Promise<void> | void;
-  onRegister?: () => void;
+export interface LoginPageProps {
+  onLogin: (credentials: LoginCredentials) => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onRegister }) => {
+
+export const LoginPage: React.FC<LoginPageProps> = ({
+  onLogin,
+  loading,
+  error
+}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    if (onLogin) {
-      await onLogin(email, password, rememberMe);
-    }
-    // Redirige al landing page después de logearse
-    navigate('/');
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleForgotPassword = () => {
-    console.log('Forgot password clicked');
-  };
+    const credentials: LoginCredentials = {
+      email,
+      password,
+      remember: rememberMe
+    };
 
-  const handleRegister = () => {
-    if (onRegister) {
-      onRegister();
-    }
+    await onLogin(credentials);
   };
 
   return (
-    <div className="min-h-screen bg-whithe flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl flex items-center justify-between gap-8">
-        {/* Logo */}
-        <div className="absolute top-8 left-8">
-          <h1 className="text-xl font-bold text-gray-900">Your Logo</h1>
-        </div>
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl flex items-center justify-between gap-12">
 
-        {/* Login Form Section */}
+        {/* Login Form */}
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            {/* Welcome Header */}
+          <div className="bg-white rounded-2xl border-2 border-gray-200 p-8">
+
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Bienvenido</h2>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Iniciar Sesion</h1>
+              <div className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-black rounded-full">
+                <LogIn className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold">Bienvenido</h1>
               <p className="text-gray-600">
-                Esta tu mascota lista para unas vacaciones?
+                ¿Está tu mascota lista para unas vacaciones?
               </p>
             </div>
 
-            {/* Login Form */}
-            <div className="space-y-6">
-              {/* Email Input */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ingresa tu correo
-                </label>
+            {error && (
+              <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-700 text-center font-medium">
+                  {error}
+                </p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+
+              <Input
+                type="email"
+                value={email}
+                onChange={setEmail}
+                placeholder="tucorreo@ejemplo.com"
+                disabled={loading}
+                required
+              />
+
+              <div className="relative">
                 <Input
-                  type="email"
-                  value={email}
-                  onChange={setEmail}
-                  placeholder="Ingresa tu correo"
-                  className="w-full"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="••••••••"
+                  disabled={loading}
                   required
                 />
-              </div>
-
-              {/* Password Input */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Contraseña
-                </label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={setPassword}
-                    placeholder="Ingresa tu contraseña"
-                    className="w-full pr-12"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-black border-gray-300 rounded focus:ring-black"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 text-sm text-gray-700">
-                    Recuerda mi contraseña
-                  </label>
-                </div>
                 <button
                   type="button"
-                  onClick={handleForgotPassword}
-                  className="text-sm text-gray-600 hover:text-gray-900 underline"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
                 >
-                  Olvidaste tu contraseña?
+                  {showPassword ? <EyeOff /> : <Eye />}
                 </button>
               </div>
 
-              {/* Login Button */}
-              <Button
-                onClick={handleLogin}
-                variant="primary"
-                size="lg"
-                className="w-full"
-              >
-                Login
+              <Button disabled={loading} className="w-full">
+                {loading ? 'Iniciando sesión…' : 'Iniciar Sesión'}
+                <ArrowRight className="ml-2" />
               </Button>
-
-              {/* Register Link */}
-              <div className="text-center">
-                <span className="text-gray-600">Aun no tienes una cuenta? </span>
-                <button
-                  type="button"
-                  onClick={handleRegister}
-                  className="font-semibold text-black hover:text-gray-800 underline"
-                >
-                  Registrate
-                </button>
-              </div>
-            </div>
+            </form>
           </div>
         </div>
 
-        {/* Cat Image Section */}
-        <div className="hidden lg:flex w-full max-w-2xl justify-center items-center">
-          <div className="relative">
-            <img
-              src={PerroLogin}
-              alt="Cat silhouette"
-              className="w-96 h-96 object-contain filter brightness-0"
-              style={{ 
-                clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
-              }}
-            />
-          </div>
+        {/* Image */}
+        <div className="hidden lg:flex">
+          <img src={PerroLogin} className="w-[500px] filter brightness-0" />
         </div>
       </div>
     </div>

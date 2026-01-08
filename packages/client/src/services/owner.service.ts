@@ -66,7 +66,10 @@ const ownerService = {
    */
   async getTiposTelefono(): Promise<CatalogoOwner[]> {
     const response = await api.get('/phones/tipos');
-    return response.data.tipos || response.data;
+    return response.data.data.tipos_telefono.map((t: any) => ({
+      id: t.tipo_telefono_id,
+      nombre: t.nombre,
+    }));
   },
 
   /**
@@ -74,7 +77,10 @@ const ownerService = {
    */
   async getTiposDomicilio(): Promise<CatalogoOwner[]> {
     const response = await api.get('/directions/tipos');
-    return response.data.tipos || response.data;
+    return response.data.data.tipos_domicilio.map((t: any) => ({
+      id: t.tipo_domicilio_id,
+      nombre: t.nombre,
+    }));
   },
 
   /**
@@ -82,7 +88,7 @@ const ownerService = {
    */
   async buscarCodigoPostal(cp: string): Promise<CodigoPostalInfo> {
     const response = await api.get(`/directions/codigo-postal/${cp}`);
-    return response.data;
+    return response.data.data;
   },
 
   /**
@@ -90,7 +96,10 @@ const ownerService = {
    */
   async getEstados(): Promise<CatalogoOwner[]> {
     const response = await api.get('/directions/estados');
-    return response.data.estados || response.data;
+    return response.data.data.map((t: any) => ({
+      id: t.id,
+      nombre: t.nombre,
+    }));
   },
 
   /**

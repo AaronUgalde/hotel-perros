@@ -5,8 +5,7 @@ import {
   LoginPage, 
   SimpleRegisterPage, 
   RegistrationPage,
-  ProtectedRoute, 
-  LoginContainer
+  ProtectedRoute 
 } from './features/auth';
 
 // Tus componentes existentes
@@ -22,7 +21,7 @@ function App() {
           {/* ========== RUTAS PÚBLICAS ========== */}
           
           {/* Login - Estilo minimalista blanco y negro */}
-          <Route path="/login" element={<LoginContainer />} />
+          <Route path="/login" element={<LoginPage />} />
           
           {/* Registro Simplificado - Solo datos básicos */}
           <Route path="/register" element={<SimpleRegisterPage />} />
