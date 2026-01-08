@@ -212,7 +212,6 @@ export const SimpleRegisterPage: React.FC = () => {
 
               {/* Register Button */}
               <Button
-                type="submit"
                 variant="primary"
                 size="lg"
                 className="w-full group"

@@ -15,7 +15,7 @@ El Header es dinámico y cambia según el rol del usuario:
 
 ---
 
-### 2. Usuario Autenticado Regular (rol_id = 2 o sin rol_id)
+### 2. Usuario Autenticado Regular (rol_id = 1 o sin rol_id)
 **Navegación disponible:**
 - 🏠 Inicio (/)
 - 📞 Contacto (/#contacto)
@@ -29,7 +29,7 @@ El Header es dinámico y cambia según el rol del usuario:
 
 ---
 
-### 3. Administrador (rol_id = 1)
+### 3. Administrador (rol_id = 2)
 **Navegación disponible:**
 - 🏠 Inicio (/)
 - 📞 Contacto (/#contacto)
@@ -104,8 +104,8 @@ El Header es dinámico y cambia según el rol del usuario:
 ### Determinación de Roles
 ```typescript
 const role = {
-  isAdmin: user?.rol_id === 1,
-  isUser: user?.rol_id === 2 || (!!user && !user.rol_id),
+  isAdmin: user?.rol_id === 2,
+  isUser: user?.rol_id === 1 || (!!user && !user.rol_id),
   isGuest: !user
 };
 ```

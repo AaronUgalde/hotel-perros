@@ -9,7 +9,17 @@ import {
   ProtectedRoute, 
   LoginContainer
 } from './features/auth';
-import { LandingPage } from './features/pets/pages/LandingPage';
+import { 
+  LandingPage, 
+  PetsListPage, 
+  PetFormPage, 
+  PetDetailPage,
+  AddVacunaPage,
+  AddEnfermedadPage,
+  AddAlergiaPage,
+  AddDesparasitacionPage,
+  AddDocumentoPage
+} from './features/pets/pages';
 
 function App() {
   return (
@@ -34,9 +44,16 @@ function App() {
             {/* ========== RUTAS PROTEGIDAS USUARIO ========== */}
             <Route element={<ProtectedRoute redirectTo="/login" />}>
               {/* Gestión de mascotas */}
-              {/* <Route path="/pets" element={<PetsPage />} /> */}
-              {/* <Route path="/pets/new" element={<NewPetPage />} /> */}
-              {/* <Route path="/pets/:id" element={<PetDetailPage />} /> */}              
+              <Route path="/pets" element={<PetsListPage />} />
+              <Route path="/pets/new" element={<PetFormPage />} />
+              <Route path="/pets/:id" element={<PetFormPage />} />
+              <Route path="/pets/:id/details" element={<PetDetailPage />} />
+              <Route path="/pets/:id/vacunas/new" element={<AddVacunaPage />} />
+              <Route path="/pets/:id/enfermedades/new" element={<AddEnfermedadPage />} />
+              <Route path="/pets/:id/alergias/new" element={<AddAlergiaPage />} />
+              <Route path="/pets/:id/desparasitaciones/new" element={<AddDesparasitacionPage />} />
+              <Route path="/pets/:id/documentos/new" element={<AddDocumentoPage />} />
+              
               {/* Reservaciones del usuario */}
               {/* <Route path="/reservaciones" element={<ReservacionesPage />} /> */}
               {/* <Route path="/reservaciones/nueva" element={<NuevaReservacionPage />} /> */}
@@ -52,9 +69,9 @@ function App() {
               {/* <Route path="/admin/reservaciones" element={<AdminReservacionesPage />} /> */}
               {/* <Route path="/admin/reservaciones/:id" element={<AdminReservacionDetailPage />} /> */}
               
-              {/* Gestión de Mascotas */}
-              {/* <Route path="/admin/mascotas" element={<AdminMascotasPage />} /> */}
-              {/* <Route path="/admin/mascotas/:id" element={<AdminMascotaDetailPage />} /> */}
+              {/* Gestión de Mascotas - Admin usa las mismas páginas pero ve todas las mascotas */}
+              <Route path="/admin/mascotas" element={<PetsListPage />} />
+              <Route path="/admin/mascotas/:id" element={<PetFormPage />} />
               
               {/* Gestión de Propietarios */}
               {/* <Route path="/admin/propietarios" element={<AdminPropietariosPage />} /> */}

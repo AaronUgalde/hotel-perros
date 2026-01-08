@@ -1,2 +1,10 @@
 export { LandingPage } from './LandingPage';
-export { default as PetRegistrationPage } from './PetRegistrationPage';
+export { PetRegistrationForm } from './PetRegistrationPage';
+export { PetsListPage } from './PetsListPage';
+export { PetFormPage } from './PetFormPage';
+export { PetDetailPage } from './PetDetailPage';
+export { AddVacunaPage } from './AddVacunaPage';
+export { AddEnfermedadPage } from './AddEnfermedadPage';
+export { AddAlergiaPage } from './AddAlergiaPage';
+export { AddDesparasitacionPage } from './AddDesparasitacionPage';
+export { AddDocumentoPage } from './AddDocumentoPage';

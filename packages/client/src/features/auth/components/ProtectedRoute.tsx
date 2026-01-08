@@ -49,7 +49,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Verificar si se requiere admin y el usuario no es admin
-  if (requireAdmin && user.rol_id !== 1) {
+  if (requireAdmin && user.rol_id !== 2) {
     return <Navigate to="/" replace />;
   }
 

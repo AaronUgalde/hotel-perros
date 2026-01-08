@@ -17,7 +17,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [formData, setFormData] = useState<LoginCredentials>({
     correo_electronico: '',
     password: '',
-    remember: false
+    remember: true // Cambiado a true por defecto para persistir la sesión
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +37,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       onSuccess?.();
     } catch (err) {
       // Error ya manejado en el hook
-      console.error('Login error:', err);
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../auth/hooks/useAuth';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { TextArea } from '../../../components/ui/TextArea';
@@ -49,7 +49,7 @@ interface FormFiles {
 }
 
 export const PetRegistrationForm: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   // Estados para opciones de los selects
   const [especies, setEspecies] = useState<SelectOption[]>([]);
@@ -370,7 +370,7 @@ export const PetRegistrationForm: React.FC = () => {
   };
 
   // Mostrar loading mientras se verifica la autenticación
-  if (authLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
