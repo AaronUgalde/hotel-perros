@@ -3,10 +3,7 @@ import api from '../../../lib/api';
 import type {
   Pet,
   CreatePetData,
-  UpdatePetData,
-  PetResponse,
-  PetsListResponse,
-  CatalogResponse
+  UpdatePetData
 } from '../types';
 
 const ENDPOINT = '/pets';

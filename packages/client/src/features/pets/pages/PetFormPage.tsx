@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { petsApi } from '../api';
-import type { Pet, CreatePetData } from '../types';
+import type { CreatePetData } from '../types';
 import { Button } from '../../../components/ui/Button';
 import { ArrowLeft, Save } from 'lucide-react';
 
@@ -23,8 +23,6 @@ export const PetFormPage: React.FC = () => {
   const [sexos, setSexos] = useState<any[]>([]);
   const [colores, setColores] = useState<any[]>([]);
   const [patronesPelo, setPatronesPelo] = useState<any[]>([]);
-  const [origenes, setOrigenes] = useState<any[]>([]);
-  const [funciones, setFunciones] = useState<any[]>([]);
 
   // Form data
   const [formData, setFormData] = useState<CreatePetData>({
@@ -44,21 +42,17 @@ export const PetFormPage: React.FC = () => {
   const loadCatalogs = async () => {
     try {
       setLoadingCatalogs(true);
-      const [especiesData, sexosData, coloresData, patronesData, origenesData, funcionesData] = await Promise.all([
+      const [especiesData, sexosData, coloresData, patronesData] = await Promise.all([
         petsApi.getEspecies(),
         petsApi.getSexos(),
         petsApi.getColores(),
         petsApi.getPatronesPelo(),
-        petsApi.getOrigenes(),
-        petsApi.getFunciones(),
       ]);
       
-      setEspecies(especiesData?.especies || []);
-      setSexos(sexosData?.sexos || []);
-      setColores(coloresData?.colores || []);
-      setPatronesPelo(patronesData?.patron_pelo || []);
-      setOrigenes(origenesData?.origenes || []);
-      setFunciones(funcionesData?.funciones || []);
+      setEspecies((especiesData as any)?.especies || []);
+      setSexos((sexosData as any)?.sexos || []);
+      setColores((coloresData as any)?.colores || []);
+      setPatronesPelo((patronesData as any)?.patron_pelo || []);
     } catch (err: any) {
       setError('Error al cargar los catálogos');
       console.error('Error en loadCatalogs:', err);
@@ -100,7 +94,7 @@ export const PetFormPage: React.FC = () => {
   };
   const loadRazas = async (especieId: number) => {
     try {
-      const razasData = await petsApi.getRazas(especieId);
+      const razasData: any = await petsApi.getRazas(especieId);
       setRazas(razasData?.razas || []);
     } catch (err) {
       console.error('Error al cargar razas:', err);

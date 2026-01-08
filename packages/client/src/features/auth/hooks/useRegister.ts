@@ -24,7 +24,7 @@ export const useRegister = (): UseRegisterReturn => {
     setError(null);
 
     try {
-      const response = await authApi.register(data);
+      await authApi.register(data);
       
       // Redirigir al dashboard o completar perfil
       navigate('/dashboard');

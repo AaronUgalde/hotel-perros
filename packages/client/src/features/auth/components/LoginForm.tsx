@@ -9,8 +9,7 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ 
-  onSuccess, 
-  redirectTo 
+  onSuccess
 }) => {
   const { login, isLoading, error, clearError } = useLogin();
   

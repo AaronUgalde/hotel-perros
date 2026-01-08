@@ -34,7 +34,7 @@ export const AddVacunaPage: React.FC = () => {
       
       // Cargar catálogo de vacunas según la especie
       if (petData.especie_id) {
-        const vacunasData = await petsApi.getVacunasByEspecie(petData.especie_id);
+        const vacunasData: any = await petsApi.getVacunasByEspecie(petData.especie_id);
         setVacunasCatalogo(vacunasData.vacunas || []);
       }
     } catch (err) {

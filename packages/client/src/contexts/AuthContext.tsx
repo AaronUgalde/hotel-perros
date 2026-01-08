@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsLoading(true);
       const response = await authService.me();
       // El servidor devuelve { success, data: { propietario } }
-      const userData = response.data?.propietario || response.propietario;
+      const userData = (response as any).data?.propietario || response.propietario;
       setUser(userData);
     } catch (error: any) {
       setUser(null);
@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setError(null);
 
       const response = await authService.login(credentials);
-      const userData = response.data?.propietario || response.propietario;
+      const userData = (response as any).data?.propietario || response.propietario;
       setUser(userData);
     } catch (err: any) {
       setError(err?.message ?? 'Error al iniciar sesión');

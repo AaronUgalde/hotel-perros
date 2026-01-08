@@ -27,7 +27,7 @@ export const AddDocumentoPage: React.FC = () => {
         petsApi.getTiposDocumentos(),
       ]);
       setPet(petData);
-      setTiposDocumento(tiposData.tipos_documentos || []);
+      setTiposDocumento((tiposData as any).tipos_documentos || []);
     } catch (err) {
       console.error('Error loading data:', err);
     }

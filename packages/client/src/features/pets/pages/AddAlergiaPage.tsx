@@ -12,7 +12,6 @@ export const AddAlergiaPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pet, setPet] = useState<any>(null);
-  const [alergiasCatalogo, setAlergiasCatalogo] = useState<any[]>([]);
   const [alergiasAgrupadas, setAlergiasAgrupadas] = useState<any>({});
   
   const [formData, setFormData] = useState({
@@ -30,9 +29,8 @@ export const AddAlergiaPage: React.FC = () => {
       setPet(petData);
       
       // Cargar catálogo de alergias
-      const alergiasData = await petsApi.getAlergiasOptions();
+      const alergiasData: any = await petsApi.getAlergiasOptions();
       const alergias = alergiasData.alergias || [];
-      setAlergiasCatalogo(alergias);
       
       // Agrupar por tipo
       const agrupadas = alergias.reduce((acc: any, alergia: any) => {

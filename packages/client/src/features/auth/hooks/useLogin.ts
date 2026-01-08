@@ -24,7 +24,7 @@ export const useLogin = (): UseLoginReturn => {
     setError(null);
 
     try {
-      const response = await authApi.login(credentials);
+      await authApi.login(credentials);
       
       // Guardar token si viene en la respuesta (opcional)
       // if (response.token) {

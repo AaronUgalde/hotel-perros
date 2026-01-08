@@ -32,7 +32,7 @@ export const AddEnfermedadPage: React.FC = () => {
       
       // Cargar catálogo de enfermedades según la especie
       if (petData.especie_id) {
-        const enfermedadesData = await petsApi.getEnfermedadesByEspecie(petData.especie_id);
+        const enfermedadesData: any = await petsApi.getEnfermedadesByEspecie(petData.especie_id);
         setEnfermedadesCatalogo(enfermedadesData.enfermedades || []);
       }
     } catch (err) {
