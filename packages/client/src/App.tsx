@@ -19,6 +19,11 @@ import {
   AddDesparasitacionPage,
   AddDocumentoPage
 } from './features/pets/pages';
+import {
+  ReservationsListPage,
+  ReservationFormPage,
+  ReservationDetailPage
+} from './features/reservations';
 
 function App() {
   return (
@@ -54,9 +59,10 @@ function App() {
               <Route path="/pets/:id/documentos/new" element={<AddDocumentoPage />} />
               
               {/* Reservaciones del usuario */}
-              {/* <Route path="/reservaciones" element={<ReservacionesPage />} /> */}
-              {/* <Route path="/reservaciones/nueva" element={<NuevaReservacionPage />} /> */}
-              {/* <Route path="/reservaciones/:id" element={<ReservacionDetailPage />} /> */}
+              <Route path="/reservations" element={<ReservationsListPage />} />
+              <Route path="/reservations/new" element={<ReservationFormPage />} />
+              <Route path="/reservations/:id/edit" element={<ReservationFormPage />} />
+              <Route path="/reservations/:id" element={<ReservationDetailPage />} />
             </Route>
             
             {/* ========== RUTAS PROTEGIDAS ADMIN ========== */}

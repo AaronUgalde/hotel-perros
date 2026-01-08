@@ -35,12 +35,21 @@ export class PagoService {
 
     const pagos = await pagoRepository.findByReservacion(reservacionId);
     const totalPagado = await pagoRepository.getTotalPagadoByReservacion(reservacionId);
-    const isPagada = await pagoRepository.isReservacionPagada(reservacionId);
+    
+    // Calcular el monto total incluyendo servicios
+    const montoHospedaje = Number(reservacion.monto_total_hospedaje || 0);
+    const montoServicios = reservacion.servicios?.reduce(
+      (sum: number, s: any) => sum + (Number(s.cantidad) * Number(s.precio_al_momento)), 
+      0
+    ) || 0;
+    const montoTotal = montoHospedaje + montoServicios;
+    
+    const isPagada = totalPagado >= montoTotal;
 
     return {
       pagos,
       totalPagado,
-      montoTotal: reservacion.monto_total_hospedaje,
+      montoTotal,
       isPagada
     };
   }
@@ -56,9 +65,25 @@ export class PagoService {
       throw new Error('No autorizado para crear pago en esta reservación');
     }
 
+    // Calcular el total incluyendo servicios
+    const montoHospedaje = Number(reservacion.monto_total_hospedaje || 0);
+    const montoServicios = reservacion.servicios?.reduce(
+      (sum: number, s: any) => sum + (Number(s.cantidad) * Number(s.precio_al_momento)), 
+      0
+    ) || 0;
+    const montoTotalReservacion = montoHospedaje + montoServicios;
+
+    // Debug: Ver qué datos tiene la reservación
+    console.log('=== DEBUG PAGO ===');
+    console.log('Hospedaje:', montoHospedaje);
+    console.log('Servicios en reservación:', reservacion.servicios);
+    console.log('Monto servicios:', montoServicios);
+    console.log('Total reservación:', montoTotalReservacion);
+    console.log('==================');
+
     // Verificar que el monto no exceda el saldo pendiente
     const totalPagado = await pagoRepository.getTotalPagadoByReservacion(data.reservacion_id!);
-    const saldoPendiente = (reservacion.monto_total_hospedaje || 0) - totalPagado;
+    const saldoPendiente = montoTotalReservacion - totalPagado;
 
     if (data.monto! > saldoPendiente) {
       throw new Error(
@@ -79,10 +104,18 @@ export class PagoService {
       const pago = await pagoRepository.findById(id);
       const reservacion = await reservacionRepository.findById(pago!.reservacion_id);
       
+      // Calcular el total incluyendo servicios
+      const montoHospedaje = Number(reservacion!.monto_total_hospedaje || 0);
+      const montoServicios = reservacion!.servicios?.reduce(
+        (sum: number, s: any) => sum + (Number(s.cantidad) * Number(s.precio_al_momento)), 
+        0
+      ) || 0;
+      const montoTotalReservacion = montoHospedaje + montoServicios;
+
       const totalPagado = await pagoRepository.getTotalPagadoByReservacion(pago!.reservacion_id);
       // Restar el monto del pago actual del total
       const totalSinPagoActual = totalPagado - pago!.monto;
-      const saldoPendiente = (reservacion!.monto_total_hospedaje || 0) - totalSinPagoActual;
+      const saldoPendiente = montoTotalReservacion - totalSinPagoActual;
 
       if (data.monto > saldoPendiente) {
         throw new Error(

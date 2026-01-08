@@ -13,7 +13,6 @@ import {
   PawPrint,
   Users,
   Settings,
-  ClipboardList,
   Briefcase
 } from 'lucide-react';
 
@@ -55,8 +54,7 @@ export const Header: React.FC = () => {
   // Navegación para usuarios regulares
   const userNavItems: NavItem[] = [
     { label: 'Mis Mascotas', href: '/pets', icon: PawPrint },
-    { label: 'Mis Reservaciones', href: '/reservaciones', icon: Calendar },
-    { label: 'Nueva Reservación', href: '/reservaciones/nueva', icon: ClipboardList }
+    { label: 'Mis Reservaciones', href: '/reservations', icon: Calendar },
   ];
 
   // Navegación para administradores

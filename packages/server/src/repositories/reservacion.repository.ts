@@ -17,6 +17,14 @@ export interface ReservacionDetalle extends Reservacion {
   habitacion_nombre?: string;
   estado_nombre?: string;
   propietario_id?: number;
+  servicios?: Array<{
+    reservacion_servicio_id: number;
+    servicio_id: number;
+    cantidad: number;
+    precio_al_momento: number;
+    servicio_nombre?: string;
+    servicio_descripcion?: string;
+  }>;
 }
 
 export interface ReservacionServicio {
@@ -64,7 +72,24 @@ export class ReservacionRepository {
       WHERE r.reservacion_id = $1
     `;
     const result = await db.query(query, [id]);
-    return result.rows[0] as ReservacionDetalle || null;
+    const reservacion = result.rows[0] as ReservacionDetalle;
+    
+    if (!reservacion) return null;
+    
+    // Cargar servicios de la reservación
+    const serviciosQuery = `
+      SELECT 
+        rs.*,
+        s.nombre as servicio_nombre,
+        s.descripcion as servicio_descripcion
+      FROM reservaciones_servicios rs
+      INNER JOIN servicios s ON rs.servicio_id = s.servicio_id
+      WHERE rs.reservacion_id = $1
+    `;
+    const serviciosResult = await db.query(serviciosQuery, [id]);
+    reservacion.servicios = serviciosResult.rows;
+    
+    return reservacion;
   }
 
   // Crear reservación

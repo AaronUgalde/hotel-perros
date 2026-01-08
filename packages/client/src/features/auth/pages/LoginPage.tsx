@@ -26,7 +26,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     e.preventDefault();
 
     const credentials: LoginCredentials = {
-      email,
+      correo_electronico: email,
       password,
       remember: rememberMe
     };
@@ -89,7 +89,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 </button>
               </div>
 
-              <Button disabled={loading} className="w-full">
+              <Button type="submit" disabled={loading} className="w-full">
                 {loading ? 'Iniciando sesión…' : 'Iniciar Sesión'}
                 <ArrowRight className="ml-2" />
               </Button>
