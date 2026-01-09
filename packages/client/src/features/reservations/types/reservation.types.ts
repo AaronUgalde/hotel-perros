@@ -16,6 +16,8 @@ export interface Reservation {
   habitacion_nombre?: string;
   estado_nombre?: string;
   propietario_id?: number;
+  propietario_nombre?: string;
+  propietario_email?: string;
   servicios?: ReservationService[];
 }
 

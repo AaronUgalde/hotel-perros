@@ -15,7 +15,8 @@ export class PetController {
     try {
       const pet = await petService.getById(
         parseInt(req.params.id),
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.json({ success: true, data: pet });
     } catch (error: any) {
@@ -108,7 +109,8 @@ export class PetController {
       const pet = await petService.update(
         parseInt(req.params.id),
         req.body,
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.json({ success: true, data: pet });
     } catch (error: any) {
@@ -122,7 +124,7 @@ export class PetController {
 
   async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      await petService.delete(parseInt(req.params.id), req.user!.propietario_id);
+      await petService.delete(parseInt(req.params.id), req.user!.propietario_id, req.user!.rol_id);
       res.json({ success: true, message: 'Mascota eliminada' });
     } catch (error: any) {
       if (error.message === 'No autorizado') {

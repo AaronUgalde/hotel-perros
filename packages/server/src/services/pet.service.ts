@@ -24,12 +24,15 @@ export class PetService {
     return await petRepository.findAllByOwner(propietarioId);
   }
 
-  async getById(id: number, propietarioId: number) {
+  async getById(id: number, propietarioId: number, rolId?: number) {
     const pet = await petRepository.findById(id);
     if (!pet) throw new Error('Mascota no encontrada');
     
-    // Verificar que pertenece al propietario
-    if (pet.propietario_id !== propietarioId) {
+    // Admins (rol_id: 2) pueden ver todas las mascotas
+    const isAdmin = rolId === 2;
+    
+    // Verificar que pertenece al propietario (o es admin)
+    if (!isAdmin && pet.propietario_id !== propietarioId) {
       throw new Error('No autorizado');
     }
     
@@ -147,15 +150,15 @@ export class PetService {
     });
   }
 
-  async update(id: number, data: Partial<Pet>, propietarioId: number) {
+  async update(id: number, data: Partial<Pet>, propietarioId: number, rolId?: number) {
     // Verificar propiedad
-    await this.getById(id, propietarioId);
+    await this.getById(id, propietarioId, rolId);
     return await petRepository.update(id, data);
   }
 
-  async delete(id: number, propietarioId: number) {
+  async delete(id: number, propietarioId: number, rolId?: number) {
     // Verificar propiedad
-    await this.getById(id, propietarioId);
+    await this.getById(id, propietarioId, rolId);
     return await petRepository.delete(id);
   }
 

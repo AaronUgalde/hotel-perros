@@ -4,10 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { reservationsApi } from '../api';
 import type { Reservation } from '../types';
 import { Button } from '../../../components/ui/Button';
-import { Calendar, Home, Plus, Eye, Trash2, Search, Filter, X } from 'lucide-react';
+import { Calendar, Home, Plus, Eye, Trash2, Search, Filter, X, User } from 'lucide-react';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 export const ReservationsListPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.rol_id === 2;
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +51,8 @@ export const ReservationsListPage: React.FC = () => {
       filtered = filtered.filter(r => 
         r.mascota_nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.habitacion_nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.propietario_nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.propietario_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.reservacion_id.toString().includes(searchTerm)
       );
     }
@@ -156,7 +161,9 @@ export const ReservationsListPage: React.FC = () => {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Mis Reservaciones</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isAdmin ? 'Todas las Reservaciones' : 'Mis Reservaciones'}
+            </h1>
             <p className="text-gray-600 mt-2">
               {filteredReservations.length} {filteredReservations.length === 1 ? 'reservación' : 'reservaciones'}
             </p>
@@ -170,10 +177,12 @@ export const ReservationsListPage: React.FC = () => {
               <Filter className="h-4 w-4 mr-2" />
               Filtros
             </Button>
-            <Button onClick={() => navigate('/reservations/new')}>
-              <Plus className="h-5 w-5 mr-2" />
-              Nueva
-            </Button>
+            {!isAdmin && (
+              <Button onClick={() => navigate('/reservations/new')}>
+                <Plus className="h-5 w-5 mr-2" />
+                Nueva
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -191,7 +200,7 @@ export const ReservationsListPage: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Mascota, habitación o ID..."
+                  placeholder={isAdmin ? "Mascota, propietario, habitación..." : "Mascota, habitación o ID..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
@@ -278,11 +287,16 @@ export const ReservationsListPage: React.FC = () => {
       ) : (
         /* Reservations List */
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredReservations.map((reservation) => (
-            <div
+          {filteredReservations.map((reservation) => {
+            const detailPath = isAdmin 
+              ? `/admin/reservaciones/${reservation.reservacion_id}`
+              : `/reservations/${reservation.reservacion_id}`;
+            
+            return (
+              <div
               key={reservation.reservacion_id}
               className="bg-white rounded-lg shadow hover:shadow-xl transition-all duration-200 overflow-hidden group cursor-pointer"
-              onClick={() => navigate(`/reservations/${reservation.reservacion_id}`)}
+              onClick={() => navigate(detailPath)}
             >
               {/* Header Card */}
               <div className="bg-gradient-to-br from-gray-900 to-gray-700 text-white p-4 relative">
@@ -332,6 +346,19 @@ export const ReservationsListPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Owner (solo para admin) */}
+                {isAdmin && reservation.propietario_nombre && (
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center mr-3">
+                      <User className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{reservation.propietario_nombre}</p>
+                      <p className="text-xs text-gray-500">{reservation.propietario_email}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Total */}
                 <div className="border-t pt-3">
                   <div className="flex justify-between items-center">
@@ -358,34 +385,37 @@ export const ReservationsListPage: React.FC = () => {
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/reservations/${reservation.reservacion_id}`);
+                    navigate(detailPath);
                   }}
                   className="flex-1 group-hover:bg-black group-hover:text-white transition-colors"
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   Ver Detalles
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(`¿Eliminar reservación #${reservation.reservacion_id} de ${reservation.mascota_nombre}?`)) {
-                      handleDelete(reservation.reservacion_id);
-                    }
-                  }}
-                  disabled={deleteId === reservation.reservacion_id}
-                  className="text-red-600 hover:bg-red-50 hover:border-red-300"
-                >
-                  {deleteId === reservation.reservacion_id ? (
-                    <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
-                  ) : (
-                    <Trash2 className="h-4 w-4" />
-                  )}
-                </Button>
+                {!isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`¿Eliminar reservación #${reservation.reservacion_id} de ${reservation.mascota_nombre}?`)) {
+                        handleDelete(reservation.reservacion_id);
+                      }
+                    }}
+                    disabled={deleteId === reservation.reservacion_id}
+                    className="text-red-600 hover:bg-red-50 hover:border-red-300"
+                  >
+                    {deleteId === reservation.reservacion_id ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -4,10 +4,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { petsApi } from '../api';
 import { Button } from '../../../components/ui/Button';
 import { ArrowLeft, Edit, Plus } from 'lucide-react';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 export const PetDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.rol_id === 2;
   
   const [pet, setPet] = useState<any>(null);
   const [vacunas, setVacunas] = useState<any[]>([]);
@@ -57,28 +60,37 @@ export const PetDetailPage: React.FC = () => {
   }
 
   if (!pet) {
+    const backPath = isAdmin ? '/admin/mascotas' : '/pets';
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="text-center">
           <p className="text-gray-500">Mascota no encontrada</p>
-          <Button onClick={() => navigate('/pets')} className="mt-4">
-            Volver a mis mascotas
+          <Button onClick={() => navigate(backPath)} className="mt-4">
+            Volver a {isAdmin ? 'mascotas' : 'mis mascotas'}
           </Button>
         </div>
       </div>
     );
   }
 
+  const backPath = isAdmin ? '/admin/mascotas' : '/pets';
+  const editPath = isAdmin ? `/admin/mascotas/${id}` : `/pets/${id}`;
+  const addVacunaPath = isAdmin ? `/admin/mascotas/${id}/vacunas/new` : `/pets/${id}/vacunas/new`;
+  const addEnfermedadPath = isAdmin ? `/admin/mascotas/${id}/enfermedades/new` : `/pets/${id}/enfermedades/new`;
+  const addAlergiaPath = isAdmin ? `/admin/mascotas/${id}/alergias/new` : `/pets/${id}/alergias/new`;
+  const addDesparasitacionPath = isAdmin ? `/admin/mascotas/${id}/desparasitaciones/new` : `/pets/${id}/desparasitaciones/new`;
+  const addDocumentoPath = isAdmin ? `/admin/mascotas/${id}/documentos/new` : `/pets/${id}/documentos/new`;
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={() => navigate('/pets')}
+          onClick={() => navigate(backPath)}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Volver a mis mascotas
+          Volver a {isAdmin ? 'mascotas' : 'mis mascotas'}
         </button>
         
         <div className="flex items-center justify-between">
@@ -90,7 +102,7 @@ export const PetDetailPage: React.FC = () => {
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate(`/pets/${id}`)}
+            onClick={() => navigate(editPath)}
           >
             <Edit className="h-5 w-5 mr-2" />
             Editar información básica
@@ -138,7 +150,7 @@ export const PetDetailPage: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => navigate(`/pets/${id}/vacunas/new`)}
+            onClick={() => navigate(addVacunaPath)}
           >
             <Plus className="h-4 w-4 mr-2" />
             Agregar Vacuna
@@ -183,7 +195,7 @@ export const PetDetailPage: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => navigate(`/pets/${id}/enfermedades/new`)}
+            onClick={() => navigate(addEnfermedadPath)}
           >
             <Plus className="h-4 w-4 mr-2" />
             Agregar Diagnóstico
@@ -229,7 +241,7 @@ export const PetDetailPage: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => navigate(`/pets/${id}/alergias/new`)}
+            onClick={() => navigate(addAlergiaPath)}
           >
             <Plus className="h-4 w-4 mr-2" />
             Agregar Alergia
@@ -283,7 +295,7 @@ export const PetDetailPage: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => navigate(`/pets/${id}/desparasitaciones/new`)}
+            onClick={() => navigate(addDesparasitacionPath)}
           >
             <Plus className="h-4 w-4 mr-2" />
             Agregar Desparasitación
@@ -338,7 +350,7 @@ export const PetDetailPage: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => navigate(`/pets/${id}/documentos/new`)}
+            onClick={() => navigate(addDocumentoPath)}
           >
             <Plus className="h-4 w-4 mr-2" />
             Subir Documento

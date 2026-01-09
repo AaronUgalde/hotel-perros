@@ -15,8 +15,10 @@ import {
   Check,
   X,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Clock
 } from 'lucide-react';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 // Toast notification component
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => (
@@ -38,6 +40,8 @@ const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 
 export const ReservationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.rol_id === 2;
   
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [payments, setPayments] = useState<ReservationPayments | null>(null);
@@ -169,6 +173,11 @@ export const ReservationDetailPage: React.FC = () => {
     }
   };
 
+  const handleCreateCita = (servicioId: number) => {
+    // Navegar a la página de crear cita con la reservación y servicio pre-seleccionados
+    navigate(`/admin/citas/new?reservacion=${id}&servicio=${servicioId}`);
+  };
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -208,7 +217,7 @@ export const ReservationDetailPage: React.FC = () => {
       {/* Header */}
       <div className="mb-8">
         <button
-          onClick={() => navigate('/reservations')}
+          onClick={() => navigate(isAdmin ? '/admin/reservaciones' : '/reservations')}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
@@ -277,6 +286,20 @@ export const ReservationDetailPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Propietario (solo para admin) */}
+              {isAdmin && reservation.propietario_nombre && (
+                <div className="flex items-start p-3 bg-purple-50 rounded-lg">
+                  <div className="w-10 h-10 bg-purple-200 rounded-lg flex items-center justify-center mr-3">
+                    <FileText className="h-5 w-5 text-purple-700" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{reservation.propietario_nombre}</p>
+                    <p className="text-sm text-gray-600">{reservation.propietario_email}</p>
+                    <p className="text-xs text-gray-500 mt-1">Propietario</p>
+                  </div>
+                </div>
+              )}
+
               {/* Notas */}
               {reservation.notas_especiales && (
                 <div className="flex items-start p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
@@ -300,18 +323,30 @@ export const ReservationDetailPage: React.FC = () => {
               
               <div className="space-y-3">
                 {reservation.servicios.map((service) => (
-                  <div key={service.reservacion_servicio_id} className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-200">
-                    <div>
+                  <div key={service.reservacion_servicio_id} className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all group">
+                    <div className="flex-1">
                       <p className="font-medium text-gray-900">{service.servicio_nombre}</p>
                       <p className="text-sm text-gray-600">{service.servicio_descripcion}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900">
-                        ${Number(service.precio_al_momento).toFixed(2)} × {service.cantidad}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        = ${(Number(service.precio_al_momento) * Number(service.cantidad)).toFixed(2)}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="font-bold text-gray-900">
+                          ${Number(service.precio_al_momento).toFixed(2)} × {service.cantidad}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          = ${(Number(service.precio_al_momento) * Number(service.cantidad)).toFixed(2)}
+                        </p>
+                      </div>
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleCreateCita(service.servicio_id)}
+                          className="px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-all flex items-center gap-2 text-sm font-medium opacity-0 group-hover:opacity-100"
+                          title="Crear cita para este servicio"
+                        >
+                          <Clock className="h-4 w-4" />
+                          Crear Cita
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

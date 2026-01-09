@@ -17,6 +17,8 @@ export interface ReservacionDetalle extends Reservacion {
   habitacion_nombre?: string;
   estado_nombre?: string;
   propietario_id?: number;
+  propietario_nombre?: string;
+  propietario_email?: string;
   servicios?: Array<{
     reservacion_servicio_id: number;
     servicio_id: number;
@@ -36,6 +38,28 @@ export interface ReservacionServicio {
 }
 
 export class ReservacionRepository {
+  // Obtener TODAS las reservaciones (solo para admin)
+  async findAll(): Promise<ReservacionDetalle[]> {
+    const query = `
+      SELECT 
+        r.*,
+        m.nombre as mascota_nombre,
+        h.nombre_numero as habitacion_nombre,
+        er.nombre as estado_nombre,
+        m.propietario_id,
+        p.nombre as propietario_nombre,
+        p.correo_electronico as propietario_email
+      FROM reservaciones r
+      INNER JOIN mascotas m ON r.mascota_id = m.mascota_id
+      INNER JOIN propietarios p ON m.propietario_id = p.propietario_id
+      LEFT JOIN habitaciones h ON r.habitacion_id = h.habitacion_id
+      LEFT JOIN estados_reservacion er ON r.estado_id = er.estado_id
+      ORDER BY r.fecha_reservacion DESC
+    `;
+    const result = await db.query(query);
+    return result.rows as ReservacionDetalle[];
+  }
+
   // Obtener todas las reservaciones de un propietario
   async findAllByOwner(propietarioId: number): Promise<ReservacionDetalle[]> {
     const query = `

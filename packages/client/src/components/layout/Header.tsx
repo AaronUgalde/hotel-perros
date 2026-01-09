@@ -11,8 +11,6 @@ import {
   Home, 
   Calendar, 
   PawPrint,
-  Users,
-  Settings,
   Briefcase
 } from 'lucide-react';
 
@@ -59,12 +57,10 @@ export const Header: React.FC = () => {
 
   // Navegación para administradores
   const adminNavItems: NavItem[] = [
-    { label: 'Dashboard', href: '/admin', icon: Home },
     { label: 'Reservaciones', href: '/admin/reservaciones', icon: Calendar },
     { label: 'Mascotas', href: '/admin/mascotas', icon: PawPrint },
-    { label: 'Propietarios', href: '/admin/propietarios', icon: Users },
     { label: 'Empleados', href: '/admin/empleados', icon: Briefcase },
-    { label: 'Servicios', href: '/admin/servicios', icon: Settings }
+    { label: 'Citas', href: '/admin/citas', icon: Calendar }
   ];
 
   // Determinar qué items mostrar según el rol

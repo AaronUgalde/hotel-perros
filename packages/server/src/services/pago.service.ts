@@ -8,14 +8,17 @@ export class PagoService {
   }
 
   // Obtener pago por ID
-  async getById(id: number, propietarioId: number) {
+  async getById(id: number, propietarioId: number, rolId?: number) {
     const pago = await pagoRepository.findById(id);
     if (!pago) {
       throw new Error('Pago no encontrado');
     }
     
-    // Verificar que el pago pertenece a una reservación del propietario
-    if (pago.propietario_id !== propietarioId) {
+    // Admins (rol_id: 2) pueden ver todos los pagos
+    const isAdmin = rolId === 2;
+    
+    // Verificar que el pago pertenece a una reservación del propietario (o es admin)
+    if (!isAdmin && pago.propietario_id !== propietarioId) {
       throw new Error('No autorizado');
     }
     
@@ -23,13 +26,17 @@ export class PagoService {
   }
 
   // Obtener pagos por reservación
-  async getByReservacion(reservacionId: number, propietarioId: number) {
+  async getByReservacion(reservacionId: number, propietarioId: number, rolId?: number) {
     // Verificar que la reservación pertenece al propietario
     const reservacion = await reservacionRepository.findById(reservacionId);
     if (!reservacion) {
       throw new Error('Reservación no encontrada');
     }
-    if (reservacion.propietario_id !== propietarioId) {
+    
+    // Admins (rol_id: 2) pueden ver todas las reservaciones
+    const isAdmin = rolId === 2;
+    
+    if (!isAdmin && reservacion.propietario_id !== propietarioId) {
       throw new Error('No autorizado');
     }
 
@@ -55,13 +62,17 @@ export class PagoService {
   }
 
   // Crear pago
-  async create(data: Partial<Pago>, propietarioId: number) {
+  async create(data: Partial<Pago>, propietarioId: number, rolId?: number) {
     // Verificar que la reservación existe y pertenece al propietario
     const reservacion = await reservacionRepository.findById(data.reservacion_id!);
     if (!reservacion) {
       throw new Error('Reservación no encontrada');
     }
-    if (reservacion.propietario_id !== propietarioId) {
+    
+    // Admins (rol_id: 2) pueden crear pagos en cualquier reservación
+    const isAdmin = rolId === 2;
+    
+    if (!isAdmin && reservacion.propietario_id !== propietarioId) {
       throw new Error('No autorizado para crear pago en esta reservación');
     }
 
@@ -95,9 +106,9 @@ export class PagoService {
   }
 
   // Actualizar pago
-  async update(id: number, data: Partial<Pago>, propietarioId: number) {
+  async update(id: number, data: Partial<Pago>, propietarioId: number, rolId?: number) {
     // Verificar propiedad
-    await this.getById(id, propietarioId);
+    await this.getById(id, propietarioId, rolId);
 
     // Si se cambia el monto, verificar que no exceda el saldo
     if (data.monto) {
@@ -128,9 +139,9 @@ export class PagoService {
   }
 
   // Eliminar pago
-  async delete(id: number, propietarioId: number) {
+  async delete(id: number, propietarioId: number, rolId?: number) {
     // Verificar propiedad
-    await this.getById(id, propietarioId);
+    await this.getById(id, propietarioId, rolId);
     return await pagoRepository.delete(id);
   }
 

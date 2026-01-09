@@ -2,23 +2,34 @@ import { Request, Response, NextFunction } from 'express';
 import { reservacionService } from '../services/reservacion.service';
 
 export class ReservacionController {
-  // Obtener todas las reservaciones del propietario
+  // Obtener todas las reservaciones (admin ve todas, usuario ve solo las suyas)
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const reservaciones = await reservacionService.getAllByOwner(req.user!.propietario_id);
-      res.json({ success: true, data: reservaciones });
+      const isAdmin = req.user!.rol_id === 2;
+      
+      if (isAdmin) {
+        // Admin ve todas las reservaciones
+        const reservaciones = await reservacionService.getAll();
+        res.json({ success: true, data: reservaciones });
+      } else {
+        // Usuario regular solo ve las suyas
+        const reservaciones = await reservacionService.getAllByOwner(req.user!.propietario_id);
+        res.json({ success: true, data: reservaciones });
+      }
     } catch (error) {
       next(error);
     }
   }
 
-  // Obtener reservación por ID
+  // Obtener reservación por ID (admin puede ver cualquiera, usuario solo las suyas)
   async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const reservacion = await reservacionService.getById(
         parseInt(req.params.id),
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
+      
       res.json({ success: true, data: reservacion });
     } catch (error: any) {
       if (error.message === 'Reservación no encontrada') {
@@ -53,7 +64,8 @@ export class ReservacionController {
       const reservacion = await reservacionService.update(
         parseInt(req.params.id),
         req.body,
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.json({ success: true, data: reservacion });
     } catch (error: any) {
@@ -72,7 +84,7 @@ export class ReservacionController {
   // Eliminar reservación
   async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      await reservacionService.delete(parseInt(req.params.id), req.user!.propietario_id);
+      await reservacionService.delete(parseInt(req.params.id), req.user!.propietario_id, req.user!.rol_id);
       res.json({ success: true, message: 'Reservación eliminada' });
     } catch (error: any) {
       if (error.message === 'No autorizado') {
@@ -89,7 +101,8 @@ export class ReservacionController {
       const servicio = await reservacionService.addServicio(
         parseInt(req.params.id),
         req.body,
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.status(201).json({ success: true, data: servicio });
     } catch (error: any) {
@@ -106,7 +119,8 @@ export class ReservacionController {
     try {
       await reservacionService.removeServicio(
         parseInt(req.params.servicioId),
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.json({ success: true, message: 'Servicio eliminado de la reservación' });
     } catch (error: any) {

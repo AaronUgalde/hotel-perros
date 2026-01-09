@@ -24,6 +24,13 @@ import {
   ReservationFormPage,
   ReservationDetailPage
 } from './features/reservations';
+import {
+  EmpleadosListPage,
+  EmpleadoFormPage,
+  EmpleadoAgendaPage,
+  CitasListPage,
+  CitaFormPage
+} from './features/admin';
 
 function App() {
   return (
@@ -70,21 +77,34 @@ function App() {
               {/* Dashboard Admin */}
               {/* <Route path="/admin" element={<AdminDashboard />} /> */}
               
-              {/* Gestión de Reservaciones */}
-              {/* <Route path="/admin/reservaciones" element={<AdminReservacionesPage />} /> */}
-              {/* <Route path="/admin/reservaciones/:id" element={<AdminReservacionDetailPage />} /> */}
+              {/* Gestión de Reservaciones - Admin */}
+              <Route path="/admin/reservaciones" element={<ReservationsListPage />} />
+              <Route path="/admin/reservaciones/:id" element={<ReservationDetailPage />} />
               
               {/* Gestión de Mascotas - Admin usa las mismas páginas pero ve todas las mascotas */}
               <Route path="/admin/mascotas" element={<PetsListPage />} />
               <Route path="/admin/mascotas/:id" element={<PetFormPage />} />
+              <Route path="/admin/mascotas/:id/details" element={<PetDetailPage />} />
+              <Route path="/admin/mascotas/:id/vacunas/new" element={<AddVacunaPage />} />
+              <Route path="/admin/mascotas/:id/enfermedades/new" element={<AddEnfermedadPage />} />
+              <Route path="/admin/mascotas/:id/alergias/new" element={<AddAlergiaPage />} />
+              <Route path="/admin/mascotas/:id/desparasitaciones/new" element={<AddDesparasitacionPage />} />
+              <Route path="/admin/mascotas/:id/documentos/new" element={<AddDocumentoPage />} />
               
               {/* Gestión de Propietarios */}
               {/* <Route path="/admin/propietarios" element={<AdminPropietariosPage />} /> */}
               {/* <Route path="/admin/propietarios/:id" element={<AdminPropietarioDetailPage />} /> */}
               
               {/* Gestión de Empleados */}
-              {/* <Route path="/admin/empleados" element={<AdminEmpleadosPage />} /> */}
-              {/* <Route path="/admin/empleados/:id" element={<AdminEmpleadoDetailPage />} /> */}
+              <Route path="/admin/empleados" element={<EmpleadosListPage />} />
+              <Route path="/admin/empleados/new" element={<EmpleadoFormPage />} />
+              <Route path="/admin/empleados/:id" element={<EmpleadoFormPage />} />
+              <Route path="/admin/empleados/:id/agenda" element={<EmpleadoAgendaPage />} />
+              
+              {/* Gestión de Citas */}
+              <Route path="/admin/citas" element={<CitasListPage />} />
+              <Route path="/admin/citas/new" element={<CitaFormPage />} />
+              <Route path="/admin/citas/:id" element={<CitaFormPage />} />
               
               {/* Gestión de Servicios */}
               {/* <Route path="/admin/servicios" element={<AdminServiciosPage />} /> */}

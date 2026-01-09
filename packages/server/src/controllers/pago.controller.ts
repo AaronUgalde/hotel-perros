@@ -17,7 +17,8 @@ export class PagoController {
     try {
       const pago = await pagoService.getById(
         parseInt(req.params.id),
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.json({ success: true, data: pago });
     } catch (error: any) {
@@ -38,7 +39,8 @@ export class PagoController {
     try {
       const result = await pagoService.getByReservacion(
         parseInt(req.params.reservacionId),
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.json({ success: true, data: result });
     } catch (error: any) {
@@ -57,7 +59,7 @@ export class PagoController {
   // Crear pago
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const pago = await pagoService.create(req.body, req.user!.propietario_id);
+      const pago = await pagoService.create(req.body, req.user!.propietario_id, req.user!.rol_id);
       res.status(201).json({ success: true, data: pago });
     } catch (error: any) {
       if (error.message.includes('No autorizado') || 
@@ -76,7 +78,8 @@ export class PagoController {
       const pago = await pagoService.update(
         parseInt(req.params.id),
         req.body,
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.json({ success: true, data: pago });
     } catch (error: any) {
@@ -95,7 +98,7 @@ export class PagoController {
   // Eliminar pago
   async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      await pagoService.delete(parseInt(req.params.id), req.user!.propietario_id);
+      await pagoService.delete(parseInt(req.params.id), req.user!.propietario_id, req.user!.rol_id);
       res.json({ success: true, message: 'Pago eliminado' });
     } catch (error: any) {
       if (error.message === 'No autorizado') {
