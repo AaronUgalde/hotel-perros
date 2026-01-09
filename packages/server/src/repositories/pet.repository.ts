@@ -27,6 +27,25 @@ export interface Pet {
 }
 
 export class PetRepository {
+  async findAll(): Promise<Pet[]> {
+    const query = `
+      SELECT m.*, 
+             p.nombre || ' ' || p.primer_apellido as propietario_nombre,
+             p.correo_electronico as propietario_email,
+             e.nombre as especie_nombre,
+             r.nombre as raza_nombre,
+             s.nombre as sexo_nombre
+      FROM mascotas m
+      LEFT JOIN propietarios p ON m.propietario_id = p.propietario_id
+      LEFT JOIN especies e ON m.especie_id = e.especie_id
+      LEFT JOIN razas r ON m.raza_id = r.raza_id
+      LEFT JOIN sexos s ON m.sexo_id = s.sexo_id
+      ORDER BY m.nombre
+    `;
+    const result = await db.query(query, []);
+    return result.rows as Pet[];
+  }
+
   async findAllByOwner(propietarioId: number): Promise<Pet[]> {
     const query = `
       SELECT * FROM mascotas 

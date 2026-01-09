@@ -25,6 +25,12 @@ export interface Pet {
   mestizo?: boolean;
   url_database_chip?: number;
   frecuency_chip?: number;
+  // Campos adicionales que vienen del JOIN (solo para admin)
+  propietario_nombre?: string;
+  propietario_email?: string;
+  especie_nombre?: string;
+  raza_nombre?: string;
+  sexo_nombre?: string;
 }
 
 export interface Catalogo {

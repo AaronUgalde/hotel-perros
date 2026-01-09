@@ -11,10 +11,12 @@ export class VaccinationController {
     try {
       const mascotaId = parseInt(req.params.mascotaId);
       const propietarioId = req.user!.propietario_id;
+      const rolId = req.user!.rol_id;
 
       const vaccinations = await vaccinationService.getAllByPet(
         mascotaId, 
-        propietarioId
+        propietarioId,
+        rolId
       );
 
       res.json({ 

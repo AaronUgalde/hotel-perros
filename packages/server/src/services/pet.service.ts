@@ -20,6 +20,10 @@ interface CreatePetWithDetailsDTO {
 }
 
 export class PetService {
+  async getAll() {
+    return await petRepository.findAll();
+  }
+
   async getAllByOwner(propietarioId: number) {
     return await petRepository.findAllByOwner(propietarioId);
   }

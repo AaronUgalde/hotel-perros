@@ -8,15 +8,20 @@ export class DiseaseService {
   /**
    * Obtener todas las enfermedades de una mascota del propietario
    */
-  async getAllByPet(mascotaId: number, propietarioId: number) {
-    // Verificar que la mascota pertenece al propietario
-    const isOwner = await diseaseRepository.verifyPetOwnership(
-      mascotaId, 
-      propietarioId
-    );
+  async getAllByPet(mascotaId: number, propietarioId: number, rolId?: number) {
+    // Admins (rol_id: 2) pueden ver todas las enfermedades
+    const isAdmin = rolId === 2;
     
-    if (!isOwner) {
-      throw new Error('Mascota no encontrada o no pertenece al propietario');
+    if (!isAdmin) {
+      // Verificar que la mascota pertenece al propietario
+      const isOwner = await diseaseRepository.verifyPetOwnership(
+        mascotaId, 
+        propietarioId
+      );
+      
+      if (!isOwner) {
+        throw new Error('Mascota no encontrada o no pertenece al propietario');
+      }
     }
 
     return await diseaseRepository.findAllByPet(mascotaId);

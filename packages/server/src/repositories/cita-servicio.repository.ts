@@ -1,4 +1,5 @@
 import { db } from '../config/database';
+import { JwtPayload } from '../utils/jwt.util';
 
 export interface CitaServicio {
   cita_id: number;
@@ -24,7 +25,16 @@ export interface CitaServicioDetalle extends CitaServicio {
 
 export class CitaServicioRepository {
   // Obtener todas las citas de un propietario
-  async findAllByOwner(propietarioId: number): Promise<CitaServicioDetalle[]> {
+  async findAllByOwner(user: JwtPayload): Promise<CitaServicioDetalle[]> {
+    let whereClause = '';
+    const params: any[] = [];
+
+    // Rol 1 → propietario
+    if (user.rol_id === 1) {
+      whereClause = 'WHERE m.propietario_id = $1';
+      params.push(user.propietario_id);
+    }
+
     const query = `
       SELECT 
         cs.*,
@@ -42,10 +52,11 @@ export class CitaServicioRepository {
       INNER JOIN mascotas m ON r.mascota_id = m.mascota_id
       LEFT JOIN servicios s ON cs.servicio_id = s.servicio_id
       LEFT JOIN empleados e ON cs.empleado_id = e.empleado_id
-      WHERE m.propietario_id = $1
+      ${whereClause}
       ORDER BY cs.fecha_hora_inicio DESC
     `;
-    const result = await db.query(query, [propietarioId]);
+
+    const result = await db.query(query, params);
     return result.rows as CitaServicioDetalle[];
   }
 

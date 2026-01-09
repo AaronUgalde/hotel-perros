@@ -11,7 +11,7 @@ export const PetsListPage: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const isAdmin = user?.rol_id === 1;
+  const isAdmin = user?.rol_id === 2;
   
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,10 +26,8 @@ export const PetsListPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      // Si es admin y está en ruta admin, obtener todas las mascotas
-      const data = (isAdminRoute && isAdmin) 
-        ? await petsApi.getAllAdmin() 
-        : await petsApi.getAll();
+      // El backend determina automáticamente según el rol
+      const data = await petsApi.getAll();
       setPets(data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Error al cargar las mascotas');
@@ -131,13 +129,28 @@ export const PetsListPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2 mb-4 text-sm text-gray-600">
+                  {/* Mostrar propietario si es admin */}
+                  {isAdmin && pet.propietario_nombre && (
+                    <div className="mb-3 pb-3 border-b border-gray-200">
+                      <div className="flex justify-between">
+                        <span className="font-medium text-purple-700">Propietario:</span>
+                        <span className="text-purple-900 font-medium">{pet.propietario_nombre}</span>
+                      </div>
+                      {pet.propietario_email && (
+                        <div className="text-xs text-gray-500 mt-1 text-right">
+                          {pet.propietario_email}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between">
                     <span className="font-medium">Especie:</span>
-                    <span>{pet.especie_id === 1 ? 'Perro' : 'Gato'}</span>
+                    <span>{pet.especie_nombre || (pet.especie_id === 1 ? 'Perro' : 'Gato')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Sexo:</span>
-                    <span>{pet.sexo_id === 1 ? 'Macho' : 'Hembra'}</span>
+                    <span>{pet.sexo_nombre || (pet.sexo_id === 1 ? 'Macho' : 'Hembra')}</span>
                   </div>
                   {pet.fecha_nacimiento && (
                     <div className="flex justify-between">

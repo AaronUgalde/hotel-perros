@@ -3,18 +3,26 @@ import {
   CitaServicio 
 } from '../repositories/cita-servicio.repository';
 import { reservacionRepository } from '../repositories/reservacion.repository';
+import { JwtPayload } from '../utils/jwt.util';
 
 export class CitaServicioService {
   // Obtener todas las citas de un propietario
-  async getAllByOwner(propietarioId: number) {
-    return await citaServicioRepository.findAllByOwner(propietarioId);
+  async getAllByOwner(user: JwtPayload) {
+    return await citaServicioRepository.findAllByOwner(user);
   }
 
   // Obtener citas por reservación
-  async getByReservacion(reservacionId: number, propietarioId: number) {
-    // Verificar que la reservación pertenece al propietario
+  async getByReservacion(reservacionId: number, propietarioId: number, rolId?: number) {
+    // Admins pueden ver citas de cualquier reservación
+    const isAdmin = rolId === 2;
+    
+    // Verificar que la reservación pertenece al propietario (o es admin)
     const reservacion = await reservacionRepository.findById(reservacionId);
-    if (!reservacion || reservacion.propietario_id !== propietarioId) {
+    if (!reservacion) {
+      throw new Error('Reservación no encontrada');
+    }
+    
+    if (!isAdmin && reservacion.propietario_id !== propietarioId) {
       throw new Error('No autorizado');
     }
 
@@ -22,14 +30,17 @@ export class CitaServicioService {
   }
 
   // Obtener cita por ID
-  async getById(id: number, propietarioId: number) {
+  async getById(id: number, propietarioId: number, rolId?: number) {
     const cita = await citaServicioRepository.findById(id);
     if (!cita) {
       throw new Error('Cita no encontrada');
     }
     
-    // Verificar que la mascota pertenece al propietario
-    if (cita.propietario_id !== propietarioId) {
+    // Admins pueden ver cualquier cita
+    const isAdmin = rolId === 2;
+    
+    // Verificar que la mascota pertenece al propietario (o es admin)
+    if (!isAdmin && cita.propietario_id !== propietarioId) {
       throw new Error('No autorizado');
     }
     
@@ -37,10 +48,17 @@ export class CitaServicioService {
   }
 
   // Crear cita de servicio
-  async create(data: Partial<CitaServicio>, propietarioId: number) {
-    // Verificar que la reservación pertenece al propietario
+  async create(data: Partial<CitaServicio>, propietarioId: number, rolId?: number) {
+    // Admins (rol_id: 2) pueden crear citas en cualquier reservación
+    const isAdmin = rolId === 2;
+    
+    // Verificar que la reservación pertenece al propietario (o es admin)
     const reservacion = await reservacionRepository.findById(data.reservacion_id!);
-    if (!reservacion || reservacion.propietario_id !== propietarioId) {
+    if (!reservacion) {
+      throw new Error('Reservación no encontrada');
+    }
+    
+    if (!isAdmin && reservacion.propietario_id !== propietarioId) {
       throw new Error('No autorizado para crear cita en esta reservación');
     }
 
@@ -66,9 +84,9 @@ export class CitaServicioService {
   }
 
   // Actualizar cita de servicio
-  async update(id: number, data: Partial<CitaServicio>, propietarioId: number) {
+  async update(id: number, data: Partial<CitaServicio>, propietarioId: number, rolId?: number) {
     // Verificar propiedad
-    await this.getById(id, propietarioId);
+    await this.getById(id, propietarioId, rolId);
 
     // Validar fechas si se actualizan
     if (data.fecha_hora_inicio && data.fecha_hora_fin) {
@@ -103,9 +121,9 @@ export class CitaServicioService {
   }
 
   // Eliminar cita de servicio
-  async delete(id: number, propietarioId: number) {
+  async delete(id: number, propietarioId: number, rolId?: number) {
     // Verificar propiedad
-    await this.getById(id, propietarioId);
+    await this.getById(id, propietarioId, rolId);
     return await citaServicioRepository.delete(id);
   }
 

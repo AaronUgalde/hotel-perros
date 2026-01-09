@@ -4,7 +4,17 @@ import { petService } from '../services/pet.service';
 export class PetController {
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const pets = await petService.getAllByOwner(req.user!.propietario_id);
+      const isAdmin = req.user!.rol_id === 2;
+      
+      let pets;
+      if (isAdmin) {
+        // Admin ve todas las mascotas
+        pets = await petService.getAll();
+      } else {
+        // Usuario regular solo ve las suyas
+        pets = await petService.getAllByOwner(req.user!.propietario_id);
+      }
+      
       res.json({ success: true, data: pets });
     } catch (error) {
       next(error);

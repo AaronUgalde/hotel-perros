@@ -8,15 +8,20 @@ export class VaccinationService {
   /**
    * Obtener todas las vacunaciones de una mascota del propietario
    */
-  async getAllByPet(mascotaId: number, propietarioId: number) {
-    // Verificar que la mascota pertenece al propietario
-    const isOwner = await vaccinationRepository.verifyPetOwnership(
-      mascotaId, 
-      propietarioId
-    );
+  async getAllByPet(mascotaId: number, propietarioId: number, rolId?: number) {
+    // Admins (rol_id: 2) pueden ver todas las vacunas
+    const isAdmin = rolId === 2;
     
-    if (!isOwner) {
-      throw new Error('Mascota no encontrada o no pertenece al propietario');
+    if (!isAdmin) {
+      // Verificar que la mascota pertenece al propietario
+      const isOwner = await vaccinationRepository.verifyPetOwnership(
+        mascotaId, 
+        propietarioId
+      );
+      
+      if (!isOwner) {
+        throw new Error('Mascota no encontrada o no pertenece al propietario');
+      }
     }
 
     return await vaccinationRepository.findAllByPet(mascotaId);

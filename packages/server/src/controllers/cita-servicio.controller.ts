@@ -5,7 +5,7 @@ export class CitaServicioController {
   // Obtener todas las citas del propietario
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const citas = await citaServicioService.getAllByOwner(req.user!.propietario_id);
+      const citas = await citaServicioService.getAllByOwner(req.user!);
       res.json({ success: true, data: citas });
     } catch (error) {
       next(error);
@@ -17,7 +17,8 @@ export class CitaServicioController {
     try {
       const citas = await citaServicioService.getByReservacion(
         parseInt(req.params.reservacionId),
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.json({ success: true, data: citas });
     } catch (error: any) {
@@ -34,7 +35,8 @@ export class CitaServicioController {
     try {
       const cita = await citaServicioService.getById(
         parseInt(req.params.id),
-        req.user!.propietario_id
+        req.user!.propietario_id,
+        req.user!.rol_id
       );
       res.json({ success: true, data: cita });
     } catch (error: any) {
@@ -53,11 +55,12 @@ export class CitaServicioController {
   // Crear cita de servicio
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const cita = await citaServicioService.create(req.body, req.user!.propietario_id);
+      const cita = await citaServicioService.create(req.body, req.user!.propietario_id, req.user!.rol_id);
       res.status(201).json({ success: true, data: cita });
     } catch (error: any) {
       if (error.message.includes('No autorizado') || 
           error.message.includes('no está disponible') ||
+          error.message.includes('no encontrada') ||
           error.message.includes('debe ser posterior')) {
         res.status(400).json({ success: false, error: error.message });
         return;

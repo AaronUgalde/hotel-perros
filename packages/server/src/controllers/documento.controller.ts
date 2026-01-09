@@ -24,7 +24,8 @@ export class DocumentoController {
       const documentos = await documentoService.getByMascota(
         mascotaId,
         req.user!.propietario_id,
-        tipoDocumentoId
+        tipoDocumentoId,
+        req.user!.rol_id
       );
 
       res.json({ success: true, data: documentos });

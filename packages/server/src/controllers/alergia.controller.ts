@@ -11,8 +11,9 @@ export class AlergiaController {
     try {
       const mascotaId = parseInt(req.params.mascotaId);
       const propietarioId = req.user!.propietario_id;
+      const rolId = req.user!.rol_id;
 
-      const alergias = await alergiaService.getAllByPet(mascotaId, propietarioId);
+      const alergias = await alergiaService.getAllByPet(mascotaId, propietarioId, rolId);
 
       res.json({ 
         success: true, 

@@ -8,14 +8,18 @@ export class DesparasitacionService {
   /**
    * Obtener todas las desparasitaciones de una mascota del propietario
    */
-  async getAllByPet(mascotaId: number, propietarioId: number) {
-    const isOwner = await desparasitacionRepository.verifyPetOwnership(
-      mascotaId, 
-      propietarioId
-    );
+  async getAllByPet(mascotaId: number, propietarioId: number, rolId?: number) {
+    const isAdmin = rolId === 2;
     
-    if (!isOwner) {
-      throw new Error('Mascota no encontrada o no pertenece al propietario');
+    if (!isAdmin) {
+      const isOwner = await desparasitacionRepository.verifyPetOwnership(
+        mascotaId, 
+        propietarioId
+      );
+      
+      if (!isOwner) {
+        throw new Error('Mascota no encontrada o no pertenece al propietario');
+      }
     }
 
     return await desparasitacionRepository.findAllByPet(mascotaId);

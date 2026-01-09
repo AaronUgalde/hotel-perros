@@ -23,6 +23,7 @@ export default function CitasListPage() {
     try {
       setLoading(true);
       const citasData = await citasApi.getAll();
+      console.log(citasData)
       // const serviciosData = await reservationsApi.getServices();
       setCitas(citasData);
       // setServicios(serviciosData);

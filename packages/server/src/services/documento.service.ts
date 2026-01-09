@@ -7,11 +7,15 @@ export class DocumentoService {
   }
 
   // CRUD Documentos
-  async getByMascota(mascotaId: number, propietarioId: number, tipoDocumentoId?: number) {
-    // Verificar que la mascota pertenece al propietario
-    const isOwner = await documentoRepository.verifyMascotaOwnership(mascotaId, propietarioId);
-    if (!isOwner) {
-      throw new Error('Mascota no encontrada o no pertenece al propietario');
+  async getByMascota(mascotaId: number, propietarioId: number, tipoDocumentoId?: number, rolId?: number) {
+    const isAdmin = rolId === 2;
+    
+    if (!isAdmin) {
+      // Verificar que la mascota pertenece al propietario
+      const isOwner = await documentoRepository.verifyMascotaOwnership(mascotaId, propietarioId);
+      if (!isOwner) {
+        throw new Error('Mascota no encontrada o no pertenece al propietario');
+      }
     }
 
     return await documentoRepository.findByMascota(mascotaId, tipoDocumentoId);

@@ -10,18 +10,12 @@ const ENDPOINT = '/pets';
 
 export const petsApi = {
   /**
-   * Obtener todas las mascotas del usuario autenticado
+   * Obtener todas las mascotas
+   * - Usuario regular: solo sus mascotas
+   * - Admin: todas las mascotas del sistema
    */
   getAll: async (): Promise<Pet[]> => {
     const { data } = await api.get(ENDPOINT);
-    return data.data;
-  },
-
-  /**
-   * Obtener todas las mascotas (solo admin)
-   */
-  getAllAdmin: async (): Promise<Pet[]> => {
-    const { data } = await api.get(`${ENDPOINT}/all`);
     return data.data;
   },
 

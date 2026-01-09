@@ -11,10 +11,12 @@ export class DiseaseController {
     try {
       const mascotaId = parseInt(req.params.mascotaId);
       const propietarioId = req.user!.propietario_id;
+      const rolId = req.user!.rol_id;
 
       const diseases = await diseaseService.getAllByPet(
         mascotaId, 
-        propietarioId
+        propietarioId,
+        rolId
       );
 
       res.json({ 
