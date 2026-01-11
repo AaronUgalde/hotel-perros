@@ -16,7 +16,7 @@ export interface Pet {
   color_principal_id?: number;
   color_ojos_id?: number;
   numero_chip?: number;
-  ruac?: number;
+  ruac?: string;
   esterilizado?: boolean;
   senas_particulares?: string;
   fecha_alta?: string;
@@ -52,7 +52,7 @@ export interface CreatePetData {
   color_principal_id?: number;
   color_ojos_id?: number;
   numero_chip?: number;
-  ruac?: number;
+  ruac?: string;
   esterilizado?: boolean;
   senas_particulares?: string;
   fecha_alta?: string;

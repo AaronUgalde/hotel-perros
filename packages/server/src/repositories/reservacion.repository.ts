@@ -80,6 +80,22 @@ export class ReservacionRepository {
     return result.rows as ReservacionDetalle[];
   }
 
+  // Obtener todas las reservaciones de una habitación (para mostrar fechas ocupadas)
+  async findByHabitacion(habitacionId: number): Promise<Array<{fecha_inicio: Date, fecha_fin: Date}>> {
+    const query = `
+      SELECT 
+        fecha_inicio,
+        fecha_fin
+      FROM reservaciones
+      WHERE habitacion_id = $1
+        AND estado_id != 3  -- Excluir canceladas
+        AND fecha_fin >= CURRENT_DATE  -- Solo futuras y actuales
+      ORDER BY fecha_inicio
+    `;
+    const result = await db.query(query, [habitacionId]);
+    return result.rows;
+  }
+
   // Obtener reservación por ID
   async findById(id: number): Promise<ReservacionDetalle | null> {
     const query = `

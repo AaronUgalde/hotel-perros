@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from './Button';
+import ReactSelect from './ReactSelect';
 
 export interface Disease {
   id: string;
@@ -59,18 +60,13 @@ export const DiseaseTable: React.FC<DiseaseTableProps> = ({
               diseases.map((disease) => (
                 <tr key={disease.id}>
                   <td className="px-3 py-4">
-                    <select
+                    <ReactSelect
+                      options={diseaseOptions}
                       value={disease.diseaseId}
-                      onChange={(e) => onUpdateDisease(disease.id, 'diseaseId', e.target.value)}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Seleccionar...</option>
-                      {diseaseOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => onUpdateDisease(disease.id, 'diseaseId', String(value))}
+                      placeholder="Seleccionar..."
+                      size="sm"
+                    />
                   </td>
                   <td className="px-3 py-4">
                     <input

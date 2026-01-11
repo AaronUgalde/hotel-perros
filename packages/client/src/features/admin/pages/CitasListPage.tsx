@@ -76,12 +76,20 @@ export default function CitasListPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Gestión de Citas</h1>
-          <button
-            onClick={() => navigate('/admin/citas/new')}
-            className="px-6 py-3 bg-black text-white hover:bg-gray-800 transition-colors"
-          >
-            + Nueva Cita
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate('/admin/citas/calendar')}
+              className="px-6 py-3 border-2 border-gray-300 hover:border-black transition-colors"
+            >
+              📅 Vista Calendario
+            </button>
+            <button
+              onClick={() => navigate('/admin/citas/new')}
+              className="px-6 py-3 bg-black text-white hover:bg-gray-800 transition-colors"
+            >
+              + Nueva Cita
+            </button>
+          </div>
         </div>
 
         {/* Filtros */}

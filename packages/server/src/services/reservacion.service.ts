@@ -149,6 +149,10 @@ export class ReservacionService {
   async getServicios() {
     return await reservacionRepository.getServicios();
   }
+
+  async getReservacionesByHabitacion(habitacionId: number) {
+    return await reservacionRepository.findByHabitacion(habitacionId);
+  }
 }
 
 export const reservacionService = new ReservacionService();

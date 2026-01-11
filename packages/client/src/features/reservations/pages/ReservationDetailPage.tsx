@@ -19,6 +19,7 @@ import {
   Clock
 } from 'lucide-react';
 import { useAuth } from '../../auth/hooks/useAuth';
+import ReactSelect from '../../../components/ui/ReactSelect';
 
 // Toast notification component
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => (
@@ -531,18 +532,19 @@ export const ReservationDetailPage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Método de Pago <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <ReactSelect
+                      options={[
+                        { value: 'efectivo', label: '💵 Efectivo' },
+                        { value: 'tarjeta_credito', label: '💳 Tarjeta de Crédito' },
+                        { value: 'tarjeta_debito', label: '💳 Tarjeta de Débito' },
+                        { value: 'transferencia', label: '🏦 Transferencia' },
+                        { value: 'paypal', label: '🅿️ PayPal' }
+                      ]}
                       value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
-                      required
-                    >
-                      <option value="efectivo">💵 Efectivo</option>
-                      <option value="tarjeta_credito">💳 Tarjeta de Crédito</option>
-                      <option value="tarjeta_debito">💳 Tarjeta de Débito</option>
-                      <option value="transferencia">🏦 Transferencia</option>
-                      <option value="paypal">🅿️ PayPal</option>
-                    </select>
+                      onChange={(value) => setPaymentMethod(value as PaymentMethod)}
+                      variant="outline"
+                      size="md"
+                    />
                   </div>
 
                   <div className="flex gap-2 pt-2">

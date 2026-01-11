@@ -15,7 +15,7 @@ export interface Pet {
   color_principal_id: number | null;
   color_ojos_id: number | null;
   numero_chip: number | null;
-  ruac: number | null;
+  ruac: string | null;
   esterilizado: boolean;
   senas_particulares: string | null;
   fecha_alta: Date | null;

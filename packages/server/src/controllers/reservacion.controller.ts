@@ -159,6 +159,16 @@ export class ReservacionController {
       next(error);
     }
   }
+
+  async getReservacionesByHabitacion(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const habitacionId = parseInt(req.params.habitacionId);
+      const reservaciones = await reservacionService.getReservacionesByHabitacion(habitacionId);
+      res.json({ success: true, data: reservaciones });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const reservacionController = new ReservacionController();

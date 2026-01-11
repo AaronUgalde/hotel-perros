@@ -7,6 +7,8 @@ import type { CreateReservationData, Room, Service } from '../types';
 import type { Pet } from '../../pets/types';
 import { Button } from '../../../components/ui/Button';
 import { ArrowLeft, AlertCircle, CheckCircle2, Calendar, Home, DollarSign, Trash2 } from 'lucide-react';
+import { DateRangePicker } from '../../../components/calendar';
+import ReactSelect from '../../../components/ui/ReactSelect';
 
 interface ServiceSelection {
   servicio_id: number;
@@ -80,6 +82,7 @@ export const ReservationFormPage: React.FC = () => {
   const [selectedServices, setSelectedServices] = useState<ServiceSelection[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [occupiedDates, setOccupiedDates] = useState<string[]>([]);
   
   // Validaciones
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
@@ -87,6 +90,42 @@ export const ReservationFormPage: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [id]);
+
+  useEffect(() => {
+    if (formData.habitacion_id) {
+      loadOccupiedDates(formData.habitacion_id);
+    }
+  }, [formData.habitacion_id]);
+
+  const loadOccupiedDates = async (habitacionId: number) => {
+    try {
+      const reservaciones = await reservationsApi.getReservacionesByHabitacion(habitacionId);
+      
+      // Convertir rangos de fechas a array de fechas individuales
+      const dates: string[] = [];
+      reservaciones.forEach(reservacion => {
+        // Parsear las fechas como fecha local, no UTC
+        const startStr = reservacion.fecha_inicio.split('T')[0];
+        const endStr = reservacion.fecha_fin.split('T')[0];
+        const start = new Date(startStr + 'T00:00:00');
+        const end = new Date(endStr + 'T00:00:00');
+        
+        // Incluir todas las fechas en el rango
+        const current = new Date(start);
+        while (current <= end) {
+          const year = current.getFullYear();
+          const month = String(current.getMonth() + 1).padStart(2, '0');
+          const day = String(current.getDate()).padStart(2, '0');
+          dates.push(`${year}-${month}-${day}`);
+          current.setDate(current.getDate() + 1);
+        }
+      });
+      
+      setOccupiedDates(dates);
+    } catch (err) {
+      console.error('Error al cargar fechas ocupadas:', err);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -150,6 +189,16 @@ export const ReservationFormPage: React.FC = () => {
     if (field === 'mascota_id') {
       const pet = pets.find(p => p.mascota_id === Number(value));
       setSelectedPet(pet || null);
+      
+      // Si ya había una habitación seleccionada, verificar si es compatible con la nueva mascota
+      if (formData.habitacion_id && pet) {
+        const currentRoom = rooms.find(r => r.habitacion_id === formData.habitacion_id);
+        if (currentRoom && currentRoom.especie_id !== pet.especie_id) {
+          // Limpiar la habitación si no es compatible
+          setFormData(prev => ({ ...prev, habitacion_id: 0 }));
+          setSelectedRoom(null);
+        }
+      }
     }
     
     if (field === 'habitacion_id') {
@@ -183,6 +232,11 @@ export const ReservationFormPage: React.FC = () => {
     
     setFormData(prev => ({ ...prev, monto_total_hospedaje: totalHospedaje }));
   };
+
+  // Filtrar habitaciones según la especie de la mascota seleccionada
+  const availableRooms = selectedPet 
+    ? rooms.filter(room => room.especie_id === selectedPet.especie_id)
+    : rooms;
 
   const addService = (servicioId: number) => {
     const service = services.find(s => s.servicio_id === servicioId);
@@ -341,25 +395,19 @@ export const ReservationFormPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Mascota <span className="text-red-500">*</span>
               </label>
-              <select
+              <ReactSelect
+                options={pets.map(pet => ({
+                  value: pet.mascota_id,
+                  label: `${pet.nombre} - ${(pet as any).especie_nombre}`
+                }))}
                 value={formData.mascota_id}
-                onChange={(e) => handleChange('mascota_id', Number(e.target.value))}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-black focus:border-transparent ${
-                  validationErrors.mascota_id ? 'border-red-500' : 'border-gray-300'
-                }`}
-                required
-                disabled={isEditing}
-              >
-                <option value={0}>Selecciona una mascota</option>
-                {pets.map(pet => (
-                  <option key={pet.mascota_id} value={pet.mascota_id}>
-                    {pet.nombre} - {(pet as any).especie_nombre}
-                  </option>
-                ))}
-              </select>
-              {validationErrors.mascota_id && (
-                <p className="text-red-500 text-xs mt-1">{validationErrors.mascota_id}</p>
-              )}
+                onChange={(value) => handleChange('mascota_id', Number(value))}
+                placeholder="Selecciona una mascota"
+                error={validationErrors.mascota_id}
+                isDisabled={isEditing}
+                variant="outline"
+                size="md"
+              />
               {selectedPet && (
                 <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-sm font-medium text-gray-900">
@@ -377,8 +425,25 @@ export const ReservationFormPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Habitación <span className="text-red-500">*</span>
               </label>
+              
+              {!selectedPet && (
+                <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    ℹ️ Primero selecciona una mascota para ver las habitaciones compatibles
+                  </p>
+                </div>
+              )}
+
+              {selectedPet && availableRooms.length === 0 && (
+                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">
+                    ⚠️ No hay habitaciones disponibles para {selectedPet.especie_nombre}s
+                  </p>
+                </div>
+              )}
+
               <div className="grid gap-3">
-                {rooms.map(room => (
+                {availableRooms.map(room => (
                   <div
                     key={room.habitacion_id}
                     onClick={() => handleChange('habitacion_id', room.habitacion_id)}
@@ -425,45 +490,27 @@ export const ReservationFormPage: React.FC = () => {
               <h2 className="text-xl font-bold text-gray-900">Selecciona las Fechas</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha de Inicio <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={formData.fecha_inicio}
-                  onChange={(e) => handleChange('fecha_inicio', e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-black focus:border-transparent ${
-                    validationErrors.fecha_inicio ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  required
-                />
-                {validationErrors.fecha_inicio && (
-                  <p className="text-red-500 text-xs mt-1">{validationErrors.fecha_inicio}</p>
-                )}
-              </div>
+            {/* Calendario Visual */}
+            <DateRangePicker
+              startDate={formData.fecha_inicio}
+              endDate={formData.fecha_fin}
+              onStartDateChange={(date) => handleChange('fecha_inicio', date)}
+              onEndDateChange={(date) => handleChange('fecha_fin', date)}
+              minDate={new Date().toISOString().split('T')[0]}
+              disabledDates={occupiedDates}
+            />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha de Fin <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={formData.fecha_fin}
-                  onChange={(e) => handleChange('fecha_fin', e.target.value)}
-                  min={formData.fecha_inicio || new Date().toISOString().split('T')[0]}
-                  className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-black focus:border-transparent ${
-                    validationErrors.fecha_fin ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  required
-                />
+            {/* Validation Errors */}
+            {(validationErrors.fecha_inicio || validationErrors.fecha_fin) && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                {validationErrors.fecha_inicio && (
+                  <p className="text-red-700 text-sm">{validationErrors.fecha_inicio}</p>
+                )}
                 {validationErrors.fecha_fin && (
-                  <p className="text-red-500 text-xs mt-1">{validationErrors.fecha_fin}</p>
+                  <p className="text-red-700 text-sm">{validationErrors.fecha_fin}</p>
                 )}
               </div>
-            </div>
+            )}
 
             {formData.fecha_inicio && formData.fecha_fin && !validationErrors.fecha_fin && (
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">

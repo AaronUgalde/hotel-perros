@@ -4,3 +4,4 @@ export { default as EmpleadoFormPage } from './EmpleadoFormPage';
 export { default as EmpleadoAgendaPage } from './EmpleadoAgendaPage';
 export { default as CitasListPage } from './CitasListPage';
 export { default as CitaFormPage } from './CitaFormPage';
+export { default as CitasCalendarPage } from './CitasCalendarPage';

@@ -97,4 +97,12 @@ export const reservationsApi = {
     const { data } = await api.get(`${ENDPOINT}/catalogs/servicios`);
     return data.data.servicios;
   },
+
+  /**
+   * Obtener reservaciones de una habitación (fechas ocupadas)
+   */
+  getReservacionesByHabitacion: async (habitacionId: number): Promise<Array<{fecha_inicio: string, fecha_fin: string}>> => {
+    const { data } = await api.get(`${ENDPOINT}/catalogs/habitaciones/${habitacionId}/reservaciones`);
+    return data.data;
+  },
 };

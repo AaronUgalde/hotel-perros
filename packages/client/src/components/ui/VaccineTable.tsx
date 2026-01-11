@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from './Button';
 import { Input } from './Input';
+import ReactSelect from './ReactSelect';
 
 export interface Vaccine {
   id: string;
@@ -55,18 +56,13 @@ export const VaccineTable: React.FC<VaccineTableProps> = ({
         ) : (
           vaccines.map((vaccine) => (
             <div key={vaccine.id} className="px-4 py-3 grid grid-cols-5 gap-4 text-sm border-t">
-              <select
+              <ReactSelect
+                options={vaccineOptions}
                 value={vaccine.vaccineId || vaccine.name}
-                onChange={(e) => onUpdateVaccine(vaccine.id, 'vaccineId', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-              >
-                <option value="">Seleccionar vacuna...</option>
-                {vaccineOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => onUpdateVaccine(vaccine.id, 'vaccineId', String(value))}
+                placeholder="Seleccionar vacuna..."
+                size="sm"
+              />
               <Input
                 type="date"
                 value={vaccine.inoculationDate}

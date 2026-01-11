@@ -6,6 +6,7 @@ import {
   type RegistroCompletoData,
   type CatalogoOwner 
 } from '../api';
+import ReactSelect from '../../../components/ui/ReactSelect';
 
 interface TelefonoForm {
   id: string;
@@ -52,8 +53,6 @@ const Input = ({ label, type = 'text', value, onChange, required, disabled, plac
 );
 
 const Select = ({ label, value, onChange, options, required, disabled, placeholder }: any) => {
-  console.log('label ', label, ' Select options:', options, 'Array?', Array.isArray(options));
-
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -61,20 +60,18 @@ const Select = ({ label, value, onChange, options, required, disabled, placehold
         {required && <span className="text-black ml-1">*</span>}
       </label>
 
-      <select
+      <ReactSelect
+        options={options.map((opt: CatalogoOwner) => ({
+          value: String(opt.id),
+          label: opt.nombre
+        }))}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:bg-gray-100 disabled:cursor-not-allowed"
-      >
-        <option value="">{placeholder || 'Seleccione una opción'}</option>
-
-        {options.map((opt: CatalogoOwner) => (
-          <option key={opt.id} value={opt.id}>
-            {opt.nombre}
-          </option>
-        ))}
-      </select>
+        onChange={(val) => onChange(val)}
+        placeholder={placeholder || 'Seleccione una opción'}
+        isDisabled={disabled}
+        variant="outline"
+        size="md"
+      />
     </div>
   );
 };

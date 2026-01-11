@@ -71,5 +71,6 @@ router.delete(
 router.get('/catalogs/estados', reservacionController.getEstadosReservacion.bind(reservacionController));
 router.get('/catalogs/habitaciones', reservacionController.getHabitaciones.bind(reservacionController));
 router.get('/catalogs/servicios', reservacionController.getServicios.bind(reservacionController));
+router.get('/catalogs/habitaciones/:habitacionId/reservaciones', reservacionController.getReservacionesByHabitacion.bind(reservacionController));
 
 export default router;

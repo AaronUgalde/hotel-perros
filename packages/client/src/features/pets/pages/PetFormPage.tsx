@@ -4,6 +4,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { petsApi } from '../api';
 import type { CreatePetData } from '../types';
 import { Button } from '../../../components/ui/Button';
+import ReactSelect from '../../../components/ui/ReactSelect';
 import { ArrowLeft, Save } from 'lucide-react';
 
 export const PetFormPage: React.FC = () => {
@@ -207,38 +208,30 @@ export const PetFormPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Especie <span className="text-red-500">*</span>
               </label>
-              <select
+              <ReactSelect
+                options={especies.map(esp => ({
+                  value: esp.especie_id,
+                  label: esp.nombre
+                }))}
                 value={formData.especie_id}
-                onChange={(e) => handleChange('especie_id', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                required
-              >
-                <option value="">Selecciona una especie</option>
-                {especies.map((esp) => (
-                  <option key={esp.especie_id} value={esp.especie_id}>
-                    {esp.nombre}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => handleChange('especie_id', Number(value))}
+                placeholder="Selecciona una especie"
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Sexo <span className="text-red-500">*</span>
               </label>
-              <select
+              <ReactSelect
+                options={sexos.map(sexo => ({
+                  value: sexo.sexo_id,
+                  label: sexo.nombre
+                }))}
                 value={formData.sexo_id}
-                onChange={(e) => handleChange('sexo_id', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                required
-              >
-                <option value="">Selecciona un sexo</option>
-                {sexos.map((sexo) => (
-                  <option key={sexo.sexo_id} value={sexo.sexo_id}>
-                    {sexo.nombre}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => handleChange('sexo_id', Number(value))}
+                placeholder="Selecciona un sexo"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -257,19 +250,16 @@ export const PetFormPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Raza
               </label>
-              <select
+              <ReactSelect
+                options={razas.map(raza => ({
+                  value: raza.raza_id,
+                  label: raza.nombre
+                }))}
                 value={formData.raza_id || ''}
-                onChange={(e) => handleChange('raza_id', e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                disabled={!formData.especie_id}
-              >
-                <option value="">Selecciona una raza</option>
-                {razas.map((raza) => (
-                  <option key={raza.raza_id} value={raza.raza_id}>
-                    {raza.nombre}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => handleChange('raza_id', value ? Number(value) : undefined)}
+                placeholder="Selecciona una raza"
+                isDisabled={!formData.especie_id}
+              />
             </div>
 
             <div className="flex items-center gap-6 col-span-2">
@@ -336,52 +326,43 @@ export const PetFormPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Patrón de Pelo
               </label>
-              <select
+              <ReactSelect
+                options={patronesPelo.map(patron => ({
+                  value: patron.patron_id,
+                  label: patron.nombre
+                }))}
                 value={formData.patron_pelo_id || ''}
-                onChange={(e) => handleChange('patron_pelo_id', e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="">Selecciona</option>
-                {patronesPelo.map((patron) => (
-                  <option key={patron.patron_id} value={patron.patron_id}>
-                    {patron.nombre}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => handleChange('patron_pelo_id', value ? Number(value) : undefined)}
+                placeholder="Selecciona"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Color Principal
               </label>
-              <select
+              <ReactSelect
+                options={colores.map(color => ({
+                  value: color.color_id,
+                  label: color.nombre
+                }))}
                 value={formData.color_principal_id || ''}
-                onChange={(e) => handleChange('color_principal_id', e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="">Selecciona</option>
-                {colores.map((color) => (
-                  <option key={color.color_id} value={color.color_id}>
-                    {color.nombre}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => handleChange('color_principal_id', value ? Number(value) : undefined)}
+                placeholder="Selecciona"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Color de Ojos
               </label>
-              <select
+              <ReactSelect
+                options={colores.map(color => ({
+                  value: color.color_id,
+                  label: color.nombre
+                }))}
                 value={formData.color_ojos_id || ''}
-                onChange={(e) => handleChange('color_ojos_id', e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="">Selecciona</option>
-                {colores.map((color) => (
-                  <option key={color.color_id} value={color.color_id}>
-                    {color.nombre}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => handleChange('color_ojos_id', value ? Number(value) : undefined)}
+                placeholder="Selecciona"
+              />
             </div>
           </div>
         </div>
@@ -405,9 +386,9 @@ export const PetFormPage: React.FC = () => {
                 RUAC
               </label>
               <input
-                type="number"
+                type="text"
                 value={formData.ruac || ''}
-                onChange={(e) => handleChange('ruac', e.target.value ? Number(e.target.value) : undefined)}
+                onChange={(e) => handleChange('ruac', e.target.value || undefined)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
               />
             </div>

@@ -6,6 +6,7 @@ import type { Reservation } from '../types';
 import { Button } from '../../../components/ui/Button';
 import { Calendar, Home, Plus, Eye, Trash2, Search, Filter, X, User } from 'lucide-react';
 import { useAuth } from '../../auth/hooks/useAuth';
+import ReactSelect from '../../../components/ui/ReactSelect';
 
 export const ReservationsListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -177,6 +178,13 @@ export const ReservationsListPage: React.FC = () => {
               <Filter className="h-4 w-4 mr-2" />
               Filtros
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/reservations/calendar')}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Vista Calendario
+            </Button>
             {!isAdmin && (
               <Button onClick={() => navigate('/reservations/new')}>
                 <Plus className="h-5 w-5 mr-2" />
@@ -221,17 +229,19 @@ export const ReservationsListPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Estado
               </label>
-              <select
+              <ReactSelect
+                options={[
+                  { value: 'all', label: 'Todos los estados' },
+                  { value: 'pendiente', label: 'Pendiente' },
+                  { value: 'confirmada', label: 'Confirmada' },
+                  { value: 'completada', label: 'Completada' },
+                  { value: 'cancelada', label: 'Cancelada' }
+                ]}
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="confirmada">Confirmada</option>
-                <option value="completada">Completada</option>
-                <option value="cancelada">Cancelada</option>
-              </select>
+                onChange={(value) => setStatusFilter(value as string)}
+                variant="outline"
+                size="md"
+              />
             </div>
           </div>
 
