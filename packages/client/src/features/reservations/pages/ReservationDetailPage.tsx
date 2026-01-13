@@ -59,7 +59,12 @@ export const ReservationDetailPage: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
-    loadData();
+    if (id && !isNaN(Number(id))) {
+      loadData();
+    } else {
+      setError('ID de reservación inválido');
+      setLoading(false);
+    }
   }, [id]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
@@ -68,6 +73,12 @@ export const ReservationDetailPage: React.FC = () => {
   };
 
   const loadData = async () => {
+    if (!id || isNaN(Number(id))) {
+      setError('ID de reservación inválido');
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       const [reservationData, paymentsData] = await Promise.all([
@@ -78,7 +89,8 @@ export const ReservationDetailPage: React.FC = () => {
       setPayments(paymentsData);
     } catch (err: any) {
       setError('Error al cargar los detalles');
-      console.error(err);
+      console.error('❌ Error en ReservationDetailPage:', err);
+      console.error('❌ ID recibido:', id);
     } finally {
       setLoading(false);
     }

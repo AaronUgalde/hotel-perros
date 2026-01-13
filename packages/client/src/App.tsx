@@ -22,7 +22,8 @@ import {
 import {
   ReservationsListPage,
   ReservationFormPage,
-  ReservationDetailPage
+  ReservationDetailPage,
+  ReservationCalendarPage
 } from './features/reservations';
 import {
   EmpleadosListPage,
@@ -46,11 +47,9 @@ function App() {
             {/* Login - Estilo minimalista blanco y negro */}
             <Route path="/login" element={<LoginContainer />} />
             
-            {/* Registro Simplificado - Solo datos básicos */}
-            <Route path="/register" element={<SimpleRegisterPage />} />
             
             {/* Registro Completo - Con teléfonos y direcciones */}
-            <Route path="/register-complete" element={<RegistrationPage />} />
+            <Route path="/register" element={<RegistrationPage />} />
             
             {/* ========== RUTAS PROTEGIDAS USUARIO ========== */}
             <Route element={<ProtectedRoute redirectTo="/login" />}>
@@ -67,6 +66,7 @@ function App() {
               
               {/* Reservaciones del usuario */}
               <Route path="/reservations" element={<ReservationsListPage />} />
+              <Route path="/reservations/calendar" element={<ReservationCalendarPage />} />
               <Route path="/reservations/new" element={<ReservationFormPage />} />
               <Route path="/reservations/:id/edit" element={<ReservationFormPage />} />
               <Route path="/reservations/:id" element={<ReservationDetailPage />} />
@@ -79,6 +79,7 @@ function App() {
               
               {/* Gestión de Reservaciones - Admin */}
               <Route path="/admin/reservaciones" element={<ReservationsListPage />} />
+              <Route path="/admin/reservaciones/calendar" element={<ReservationCalendarPage />} />
               <Route path="/admin/reservaciones/:id" element={<ReservationDetailPage />} />
               
               {/* Gestión de Mascotas - Admin usa las mismas páginas pero ve todas las mascotas */}

@@ -25,10 +25,12 @@ export const ReservationCalendarPage: React.FC = () => {
     try {
       setLoading(true);
       const data = await reservationsApi.getAll();
+      console.log('📦 Datos de reservaciones desde el servidor:', data);
+      console.log('📊 Cantidad de reservaciones:', data.length);
       setReservations(data);
     } catch (err: any) {
       setError('Error al cargar las reservaciones');
-      console.error(err);
+      console.error('❌ Error cargando reservaciones:', err);
     } finally {
       setLoading(false);
     }

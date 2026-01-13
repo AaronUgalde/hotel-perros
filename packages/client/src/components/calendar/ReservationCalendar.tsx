@@ -5,6 +5,7 @@ import type { View } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './calendar-styles.css';
 import type { Reservation } from '../../features/reservations/types';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,13 +45,42 @@ export const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   const navigate = useNavigate();
 
   const events: CalendarEvent[] = useMemo(() => {
-    return reservations.map(reservation => ({
-      id: reservation.reservacion_id,
-      title: `${reservation.mascota_nombre} - ${reservation.habitacion_nombre}`,
-      start: new Date(reservation.fecha_inicio),
-      end: new Date(reservation.fecha_fin),
-      resource: reservation,
-    }));
+    console.log('📅 Generando eventos del calendario:', reservations);
+    
+    const calendarEvents = reservations.map(reservation => {
+      // Asegurar que las fechas sean objetos Date válidos
+      const startDate = new Date(reservation.fecha_inicio);
+      const endDate = new Date(reservation.fecha_fin);
+      
+      // Verificar si las fechas son válidas
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.error('❌ Fecha inválida en reservación:', reservation);
+        return null;
+      }
+      
+      // Ajustar la fecha de fin para incluir el día completo
+      // react-big-calendar usa rangos exclusivos, así que sumamos un día
+      endDate.setDate(endDate.getDate() + 1);
+      
+      console.log('✅ Evento creado:', {
+        id: reservation.reservacion_id,
+        title: `${reservation.mascota_nombre} - ${reservation.habitacion_nombre}`,
+        start: startDate.toISOString(),
+        end: endDate.toISOString(),
+        estado: reservation.estado_nombre
+      });
+      
+      return {
+        id: reservation.reservacion_id,
+        title: `${reservation.mascota_nombre} - ${reservation.habitacion_nombre}`,
+        start: startDate,
+        end: endDate,
+        resource: reservation,
+      };
+    }).filter(event => event !== null) as CalendarEvent[];
+    
+    console.log('📊 Total de eventos generados:', calendarEvents.length);
+    return calendarEvents;
   }, [reservations]);
 
   const eventStyleGetter = (event: CalendarEvent) => {
@@ -112,21 +142,31 @@ export const ReservationCalendar: React.FC<ReservationCalendarProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6" style={{ height: '700px' }}>
-      <Calendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: '100%' }}
-        eventPropGetter={eventStyleGetter}
-        onSelectEvent={handleSelectEvent}
-        messages={messages}
-        culture='es'
-        defaultView={defaultView}
-        views={['month', 'week', 'day', 'agenda']}
-        popup
-      />
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      {events.length === 0 && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800 text-center">
+            ℹ️ No hay reservaciones para mostrar en el calendario.
+            {reservations.length > 0 && ' Revisa que las fechas de tus reservaciones sean válidas.'}
+          </p>
+        </div>
+      )}
+      <div style={{ height: '700px' }}>
+        <Calendar
+          localizer={localizer}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: '100%' }}
+          eventPropGetter={eventStyleGetter}
+          onSelectEvent={handleSelectEvent}
+          messages={messages}
+          culture='es'
+          defaultView={defaultView}
+          views={['month', 'week', 'day', 'agenda']}
+          popup
+        />
+      </div>
       
       {/* Leyenda */}
       <div className="mt-4 flex flex-wrap gap-4 text-sm">
