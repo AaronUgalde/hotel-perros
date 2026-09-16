@@ -15,11 +15,10 @@
   <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?logo=tailwindcss&logoColor=white">
 </p>
 
-<!-- <<< FILL >>> Put a real screenshot or a 15-second GIF here. This is the single
-     highest-leverage thing in the whole README — most reviewers decide in 10 seconds.
-     Suggested: the reservation calendar with data in it.
-     Save to  docs/screenshot-calendar.png  and uncomment: -->
-<!-- ![Reservation calendar](docs/screenshot-calendar.png) -->
+![Booking a reservation end to end](docs/demo.gif)
+
+*Full booking flow at 3× speed: select dates, add care notes, pick add-on services, create the
+reservation, and settle the balance.*
 
 **At a glance**
 
